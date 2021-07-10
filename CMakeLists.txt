@@ -7,3 +7,6 @@ project(
   LANGUAGES CXX)
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "src/*.[ch]pp")
 add_executable(${PROJECT_NAME} ${SOURCES})
+
+find_package(SDL2 CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} SDL2)

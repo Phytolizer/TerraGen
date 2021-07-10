@@ -1,0 +1,3 @@
+[submodule "Terraria"]
+	path = Terraria
+	url = https://github.com/UTINKA/Terraria.git
