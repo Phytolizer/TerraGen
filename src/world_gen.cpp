@@ -54,14 +54,33 @@ World Generate(WorldSize size)
 
     // Choose Surface line (16-20% down)
     int surfaceLine = 100;
-    double surfaceScale = 0.08;
-    double surfaceAmplitude = 4;
+    double surfaceScale = 0.06;
+    double surfaceAmplitude;
+    int surfaceAmplitudeTime = 0;
 
     std::vector<int> surfaceHeights;
     surfaceHeights.reserve(width);
-    for (int i = 0; i < width; ++i)
+    for (int i = width / 2; i >= 0; --i)
     {
-        int h = surfaceLine + surfaceAmplitude * perlin.GetValue(0, i * surfaceScale, seed);
+        if (--surfaceAmplitudeTime <= 0)
+        {
+            surfaceAmplitude = std::uniform_real_distribution<double>{0, std::min<double>(12, 0.5 + i * 0.1)}(eng);
+            surfaceAmplitudeTime = std::uniform_int_distribution<>{width / 32, width / 12}(eng);
+        }
+        int surfaceOffset = perlin.GetValue(10, i * 0.00001, seed) * 25;
+        int h = surfaceLine + surfaceOffset + surfaceAmplitude * perlin.GetValue(0, i * surfaceScale, seed);
+        surfaceHeights.push_back(h);
+    }
+    for (int i = 0; i < width / 2; ++i)
+    {
+        if (--surfaceAmplitudeTime <= 0)
+        {
+            surfaceAmplitude = std::uniform_real_distribution<double>{0, std::min<double>(12, 0.5 + i * 0.1)}(eng);
+            surfaceAmplitudeTime = std::uniform_int_distribution<>{width / 32, width / 12}(eng);
+        }
+        int surfaceOffset = perlin.GetValue(10, (i + width) * 0.00001, seed) * 25;
+        int h = surfaceLine + surfaceOffset +
+                surfaceAmplitude * perlin.GetValue(0, static_cast<double>(i + width) / 2 * surfaceScale, seed);
         surfaceHeights.push_back(h);
     }
 
