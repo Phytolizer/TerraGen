@@ -1,5 +1,6 @@
 #include "world_gen.hpp"
-#include <noise.h>
+#include "randomness.hpp"
+#include <FastNoiseLite.h>
 
 namespace WorldGen
 {
@@ -10,8 +11,9 @@ World Generate(WorldSize size)
 {
     std::random_device _rd;
     std::default_random_engine eng{_rd()};
-    int seed = std::uniform_int_distribution<>{0, INT_MAX}(eng);
-    noise::module::Perlin perlin;
+    int seed = 100; // std::uniform_int_distribution<>{0, INT_MAX}(eng);
+    eng.seed(seed);
+    FastNoiseLite n;
 
     std::vector<std::vector<Tile>> tiles;
     int width;
@@ -53,48 +55,48 @@ World Generate(WorldSize size)
      */
 
     // Choose Surface line (16-20% down)
-    int surfaceLine = 100;
-    double surfaceScale = 0.06;
-    double surfaceAmplitude;
-    int surfaceAmplitudeTime = 0;
+    int surfaceLine = RandInt(width * 0.16, width * 0.2, eng);
+    // double surfaceScale = 0.06;
+    // double surfaceAmplitude;
+    // int surfaceAmplitudeTime = 0;
 
     std::vector<int> surfaceHeights;
     surfaceHeights.reserve(width);
-    for (int i = width / 2; i >= 0; --i)
+    double perlinScale = 5;
+    double perlinAmplitude = 4;
+    for (int i = 0; i < width; ++i)
     {
-        if (--surfaceAmplitudeTime <= 0)
-        {
-            surfaceAmplitude = std::uniform_real_distribution<double>{0, std::min<double>(12, 0.5 + i * 0.1)}(eng);
-            surfaceAmplitudeTime = std::uniform_int_distribution<>{width / 32, width / 12}(eng);
-        }
-        int surfaceOffset = perlin.GetValue(10, i * 0.00001, seed) * 25;
-        int h = surfaceLine + surfaceOffset + surfaceAmplitude * perlin.GetValue(0, i * surfaceScale, seed);
-        surfaceHeights.push_back(h);
-    }
-    for (int i = 0; i < width / 2; ++i)
-    {
-        if (--surfaceAmplitudeTime <= 0)
-        {
-            surfaceAmplitude = std::uniform_real_distribution<double>{0, std::min<double>(12, 0.5 + i * 0.1)}(eng);
-            surfaceAmplitudeTime = std::uniform_int_distribution<>{width / 32, width / 12}(eng);
-        }
-        int surfaceOffset = perlin.GetValue(10, (i + width) * 0.00001, seed) * 25;
-        int h = surfaceLine + surfaceOffset +
-                surfaceAmplitude * perlin.GetValue(0, static_cast<double>(i + width) / 2 * surfaceScale, seed);
-        surfaceHeights.push_back(h);
+        // if (--surfaceAmplitudeTime <= 0)
+        //{
+        // surfaceAmplitude = std::uniform_real_distribution<double>{0, std::min<double>(12, 0.5 + i * 0.1)}(eng);
+        // surfaceAmplitudeTime = std::uniform_int_distribution<>{width / 32, width / 12}(eng);
+        //}
+        // int surfaceOffset = perlin.GetValue(10, i * 0.00001, seed) * 25;
+        // int h = surfaceLine + surfaceOffset + surfaceAmplitude * perlin.GetValue(0, i * surfaceScale, seed);
+
+        int dist = std::abs(i - width / 2);
+
+        double noiseScale1 = n.GetNoise<double>(0, i * perlinScale) * perlinAmplitude;
+        double noiseScale2 = n.GetNoise<double>(0, i * perlinScale / 2) * perlinAmplitude / 2;
+        double noiseScale4 = n.GetNoise<double>(0, i * perlinScale / 4) * perlinAmplitude / 4;
+
+        double noise = noiseScale1 + noiseScale2 + noiseScale4;
+
+        int pos = surfaceLine + noise;
+
+        surfaceHeights.push_back(pos);
     }
 
     // Choose Cavern line (32-36% down)
-    int cavernLine = 200;
-    double cavernScale = 0.02;
-    double cavernAmplitude = 10;
+    int cavernLine = RandInt(width * 0.32, width * 0.36, eng);
+    // double cavernScale = 0.02;
+    // double cavernAmplitude = 10;
 
     std::vector<int> cavernHeights;
     cavernHeights.reserve(width);
     for (int i = 0; i < width; ++i)
     {
-        int h = cavernLine + cavernAmplitude * perlin.GetValue(1, i * cavernScale, seed);
-        cavernHeights.push_back(h);
+        cavernHeights.push_back(cavernLine);
     }
 
     for (int col = 0; col < width; ++col)
