@@ -9,7 +9,9 @@ static void FillRow(std::vector<std::vector<Tile>> *tiles, int row, TileType typ
 World Generate(WorldSize size)
 {
     std::random_device _rd;
-    std::default_random_engine eng(_rd());
+    std::default_random_engine eng{_rd()};
+    int seed = std::uniform_int_distribution<>{0, INT_MAX}(eng);
+    noise::module::Perlin perlin;
 
     std::vector<std::vector<Tile>> tiles;
     int width;
@@ -50,50 +52,48 @@ World Generate(WorldSize size)
      * 11% Underworld
      */
 
-    // FILL ALL AIR
-
     // Choose Surface line (16-20% down)
-    // For each in width
-    //      Choose a height from line (using perlin noise)
-    //      Fill all beneath to dirt
+    int surfaceLine = 100;
+    double surfaceScale = 0.08;
+    double surfaceAmplitude = 4;
+
+    std::vector<int> surfaceHeights;
+    surfaceHeights.reserve(width);
+    for (int i = 0; i < width; ++i)
+    {
+        int h = surfaceLine + surfaceAmplitude * perlin.GetValue(0, i * surfaceScale, seed);
+        surfaceHeights.push_back(h);
+    }
 
     // Choose Cavern line (32-36% down)
-    // For each in width
-    //      Choose a height from line (using perlin noise)
-    //      Fill all beneath to stone
+    int cavernLine = 200;
+    double cavernScale = 0.02;
+    double cavernAmplitude = 10;
 
-    for (int row = 0; row < height; ++row)
+    std::vector<int> cavernHeights;
+    cavernHeights.reserve(width);
+    for (int i = 0; i < width; ++i)
     {
-        double pct = static_cast<double>(row) / static_cast<double>(height);
-        if (pct < 0.06)
+        int h = cavernLine + cavernAmplitude * perlin.GetValue(1, i * cavernScale, seed);
+        cavernHeights.push_back(h);
+    }
+
+    for (int col = 0; col < width; ++col)
+    {
+        for (int row = 0; row < height; ++row)
         {
-            // space
-            FillRow(&tiles, row, TileType::SpaceAir);
-        }
-        else if (pct < 0.24)
-        {
-            // surface
-            FillRow(&tiles, row, TileType::Air);
-        }
-        else if (pct < 0.34)
-        {
-            // underground
-            FillRow(&tiles, row, TileType::Dirt);
-        }
-        else if (pct < 0.69)
-        {
-            // cavern (water)
-            FillRow(&tiles, row, TileType::Water);
-        }
-        else if (pct < 0.89)
-        {
-            // cavern (lava)
-            FillRow(&tiles, row, TileType::Lava);
-        }
-        else
-        {
-            // underworld
-            FillRow(&tiles, row, TileType::Underworld);
+            if (row < surfaceHeights[col])
+            {
+                tiles[col][row].type = TileType::Air;
+            }
+            else if (row < cavernHeights[col])
+            {
+                tiles[col][row].type = TileType::Dirt;
+            }
+            else
+            {
+                tiles[col][row].type = TileType::Stone;
+            }
         }
     }
 
