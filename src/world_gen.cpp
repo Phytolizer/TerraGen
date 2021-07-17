@@ -1,6 +1,7 @@
 #include "world_gen.hpp"
 #include "randomness.hpp"
 #include <FastNoiseLite.h>
+#include <chrono>
 
 namespace WorldGen
 {
@@ -9,6 +10,7 @@ static void FillRow(std::vector<std::vector<Tile>> *tiles, int row, TileType typ
 
 World Generate(WorldSize size)
 {
+    auto start = std::chrono::high_resolution_clock::now();
     std::random_device _rd;
     std::default_random_engine eng{_rd()};
     int seed = 100; // std::uniform_int_distribution<>{0, INT_MAX}(eng);
@@ -21,8 +23,8 @@ World Generate(WorldSize size)
     switch (size)
     {
     case WorldSize::Tiny:
-        width = 500;
-        height = 500;
+        width = 1280;
+        height = 720;
         break;
     case WorldSize::Small:
         width = 8400;
@@ -55,15 +57,25 @@ World Generate(WorldSize size)
      */
 
     // Choose Surface line (16-20% down)
-    int surfaceLine = RandInt(width * 0.16, width * 0.2, eng);
+    int surfaceLine = RandInt(height * 0.16, height * 0.2, eng);
     // double surfaceScale = 0.06;
     // double surfaceAmplitude;
     // int surfaceAmplitudeTime = 0;
 
     std::vector<int> surfaceHeights;
     surfaceHeights.reserve(width);
+    // VARIABLES TO SET
+    int spawnArea = 30;
+    int spawnAreaAmplitude = 1;
+    int spawnAreaFallout = 60;
     double perlinScale = 5;
-    double perlinAmplitude = 4;
+    double perlinAmplitudeMin = 0.5;
+    double perlinAmplitudeMax = 10;
+    int amplitudeTimeMin = width / 32;
+    int amplitudeTimeMax = width / 12;
+    // Other Variables
+    double perlinAmplitude;
+    int amplitudeTime;
     for (int i = 0; i < width; ++i)
     {
         // if (--surfaceAmplitudeTime <= 0)
@@ -76,19 +88,41 @@ World Generate(WorldSize size)
 
         int dist = std::abs(i - width / 2);
 
-        double noiseScale1 = n.GetNoise<double>(0, i * perlinScale) * perlinAmplitude;
-        double noiseScale2 = n.GetNoise<double>(0, i * perlinScale / 2) * perlinAmplitude / 2;
-        double noiseScale4 = n.GetNoise<double>(0, i * perlinScale / 4) * perlinAmplitude / 4;
+        double noiseScale1 = n.GetNoise<double>(0, i * perlinScale);
+        double noiseScale2 = n.GetNoise<double>(0, i * perlinScale / 2) / 2;
+        double noiseScale4 = n.GetNoise<double>(0, i * perlinScale / 4) / 4;
 
         double noise = noiseScale1 + noiseScale2 + noiseScale4;
 
-        int pos = surfaceLine + noise;
+        double amplitude;
+        if (dist <= spawnArea)
+        {
+            amplitude = spawnAreaAmplitude;
+        }
+        else
+        {
+            if (--amplitudeTime <= 0)
+            {
+                amplitudeTime = RandInt(perlinAmplitudeMin, amplitudeTimeMax, eng);
+                perlinAmplitude = RandDouble(perlinAmplitudeMin, perlinAmplitudeMax, eng);
+            }
+            if (dist <= spawnArea + spawnAreaFallout)
+            {
+                double ampSwitch = (dist - spawnArea) / spawnAreaFallout;
+                amplitude = spawnAreaAmplitude * (1 - ampSwitch) + perlinAmplitude * ampSwitch;
+            }
+            else
+            {
+                amplitude = perlinAmplitude; // * (1 + (width / 2) * static_cast<double>(dist) / width / 2);
+            }
+        }
+        int pos = surfaceLine + noise * amplitude;
 
         surfaceHeights.push_back(pos);
     }
 
     // Choose Cavern line (32-36% down)
-    int cavernLine = RandInt(width * 0.32, width * 0.36, eng);
+    int cavernLine = RandInt(height * 0.32, height * 0.36, eng);
     // double cavernScale = 0.02;
     // double cavernAmplitude = 10;
 
@@ -126,6 +160,9 @@ World Generate(WorldSize size)
      * Big desert (+caves)
      */
 
+    auto end = std::chrono::high_resolution_clock::now();
+    auto elapsed = end - start;
+    fmt::print("Took {} years\n", elapsed.count());
     return World{std::move(tiles)};
 }
 

@@ -1,7 +1,7 @@
 #include "randomness.hpp"
 #include <random>
 
-double RandFloat(double min, double max, std::default_random_engine &eng)
+double RandDouble(double min, double max, std::default_random_engine &eng)
 {
     return std::uniform_real_distribution<double>{min, max}(eng);
 }

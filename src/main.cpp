@@ -6,7 +6,7 @@
 int main(int argc, char *argv[])
 {
     SDL_Init(SDL_INIT_VIDEO);
-    Viewport viewport{0, 0, 500, 500, 1};
+    Viewport viewport{0, 0, 1280, 720, 1};
     World world = WorldGen::Generate(WorldSize::Tiny);
     bool run = true;
     while (run)
