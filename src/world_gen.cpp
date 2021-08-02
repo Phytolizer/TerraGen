@@ -18,8 +18,8 @@ World Generate(WorldSize size)
     FastNoiseLite n;
 
     std::vector<std::vector<Tile>> tiles;
-    int width;
-    int height;
+    int width = 0;
+    int height = 0;
     switch (size)
     {
     case WorldSize::Tiny:
@@ -75,7 +75,7 @@ World Generate(WorldSize size)
     int amplitudeTimeMax = width / 12;
     // Other Variables
     double perlinAmplitude;
-    int amplitudeTime;
+    int amplitudeTime = 0;
     for (int i = 0; i < width; ++i)
     {
         // if (--surfaceAmplitudeTime <= 0)
@@ -94,7 +94,7 @@ World Generate(WorldSize size)
 
         double noise = noiseScale1 + noiseScale2 + noiseScale4;
 
-        double amplitude;
+        double amplitude = 0;
         if (dist <= spawnArea)
         {
             amplitude = spawnAreaAmplitude;

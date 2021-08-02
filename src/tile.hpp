@@ -1,7 +1,7 @@
 #ifndef TERRAGEN_TILE_HPP
 #define TERRAGEN_TILE_HPP
 
-#include <SDL2/SDL_video.h>
+#include <SDL_video.h>
 #include <cstdint>
 #include <unordered_map>
 

@@ -1,6 +1,6 @@
 #include "viewport.hpp"
 #include "world_gen.hpp"
-#include <SDL2/SDL.h>
+#include <SDL.h>
 #include <fmt/format.h>
 
 int main(int argc, char *argv[])

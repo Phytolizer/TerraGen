@@ -8,7 +8,8 @@ project(
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "src/*.[ch]pp")
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-find_package(SDL2 CONFIG REQUIRED)
-find_package(fmt CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE SDL2 fmt::fmt)
+add_subdirectory(SDL)
+
+find_package(fmt REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL2-static SDL2main fmt::fmt)
 target_include_directories(${PROJECT_NAME} PRIVATE "deps/FastNoiseLite")

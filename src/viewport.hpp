@@ -2,8 +2,8 @@
 #define TERRAGEN_VIEWPORT_HPP
 
 #include "world.hpp"
-#include <SDL2/SDL_render.h>
-#include <SDL2/SDL_video.h>
+#include <SDL_render.h>
+#include <SDL_video.h>
 
 struct Viewport
 {
