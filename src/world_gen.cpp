@@ -5,19 +5,16 @@
 
 namespace WorldGen
 {
-
-static void FillRow(std::vector<std::vector<Tile>> *tiles, int row, TileType type);
-
-World Generate(WorldSize size)
+World Generate(const WorldSize size)
 {
-    auto start = std::chrono::high_resolution_clock::now();
+    const auto start = std::chrono::high_resolution_clock::now();
     std::random_device _rd;
     std::default_random_engine eng{_rd()};
-    int seed = 100; // std::uniform_int_distribution<>{0, INT_MAX}(eng);
+    constexpr int seed = 100;
     eng.seed(seed);
     FastNoiseLite n;
 
-    std::vector<std::vector<Tile>> tiles;
+    std::vector<std::vector<Tile::Tile>> tiles;
     int width = 0;
     int height = 0;
     switch (size)
@@ -57,97 +54,87 @@ World Generate(WorldSize size)
      */
 
     // Choose Surface line (16-20% down)
-    int surfaceLine = RandInt(height * 0.16, height * 0.2, eng);
+    const int surface_line = Random::GetInt(static_cast<int>(height * 0.16), static_cast<int>(height * 0.20), eng);
     // double surfaceScale = 0.06;
     // double surfaceAmplitude;
     // int surfaceAmplitudeTime = 0;
 
-    std::vector<int> surfaceHeights;
-    surfaceHeights.reserve(width);
+    std::vector surface_heights(width, 0);
     // VARIABLES TO SET
-    int spawnArea = 30;
-    int spawnAreaAmplitude = 1;
-    int spawnAreaFallout = 60;
-    double perlinScale = 5;
-    double perlinAmplitudeMin = 0.5;
-    double perlinAmplitudeMax = 10;
-    int amplitudeTimeMin = width / 32;
-    int amplitudeTimeMax = width / 12;
+    constexpr int spawn_area = 30;
+    constexpr int spawn_area_amplitude = 1;
+    constexpr int spawn_area_fallout = 60;
+    constexpr double perlin_scale = 5;
+    constexpr double perlin_amplitude_min = 0.5;
+    constexpr double perlin_amplitude_max = 10;
+    const int amplitude_time_min = width / 32;
+    const int amplitude_time_max = width / 12;
     // Other Variables
-    double perlinAmplitude;
-    int amplitudeTime = 0;
+    double perlin_amplitude = 0;
+    int amplitude_time = 0;
     for (int i = 0; i < width; ++i)
     {
-        // if (--surfaceAmplitudeTime <= 0)
-        //{
-        // surfaceAmplitude = std::uniform_real_distribution<double>{0, std::min<double>(12, 0.5 + i * 0.1)}(eng);
-        // surfaceAmplitudeTime = std::uniform_int_distribution<>{width / 32, width / 12}(eng);
-        //}
-        // int surfaceOffset = perlin.GetValue(10, i * 0.00001, seed) * 25;
-        // int h = surfaceLine + surfaceOffset + surfaceAmplitude * perlin.GetValue(0, i * surfaceScale, seed);
+        const int dist = std::abs(i - width / 2);
 
-        int dist = std::abs(i - width / 2);
+        const double noise_scale_1 = n.GetNoise<double>(0, i * perlin_scale);
+        const double noise_scale_2 = n.GetNoise<double>(0, i * perlin_scale / 2) / 2;
+        const double noise_scale_4 = n.GetNoise<double>(0, i * perlin_scale / 4) / 4;
 
-        double noiseScale1 = n.GetNoise<double>(0, i * perlinScale);
-        double noiseScale2 = n.GetNoise<double>(0, i * perlinScale / 2) / 2;
-        double noiseScale4 = n.GetNoise<double>(0, i * perlinScale / 4) / 4;
+        const double noise = noise_scale_1 + noise_scale_2 + noise_scale_4;
 
-        double noise = noiseScale1 + noiseScale2 + noiseScale4;
-
-        double amplitude = 0;
-        if (dist <= spawnArea)
+        double amplitude;
+        if (dist <= spawn_area)
         {
-            amplitude = spawnAreaAmplitude;
+            amplitude = spawn_area_amplitude;
         }
         else
         {
-            if (--amplitudeTime <= 0)
+            if (--amplitude_time <= 0)
             {
-                amplitudeTime = RandInt(perlinAmplitudeMin, amplitudeTimeMax, eng);
-                perlinAmplitude = RandDouble(perlinAmplitudeMin, perlinAmplitudeMax, eng);
+                amplitude_time = Random::GetInt(amplitude_time_min, amplitude_time_max, eng);
+                perlin_amplitude = Random::GetDouble(perlin_amplitude_min, perlin_amplitude_max, eng);
             }
-            if (dist <= spawnArea + spawnAreaFallout)
+            if (dist <= spawn_area + spawn_area_fallout)
             {
-                double ampSwitch = (dist - spawnArea) / spawnAreaFallout;
-                amplitude = spawnAreaAmplitude * (1 - ampSwitch) + perlinAmplitude * ampSwitch;
+                const double amp_switch = (dist - spawn_area) / spawn_area_fallout;
+                amplitude = spawn_area_amplitude * (1 - amp_switch) + perlin_amplitude * amp_switch;
             }
             else
             {
-                amplitude = perlinAmplitude; // * (1 + (width / 2) * static_cast<double>(dist) / width / 2);
+                amplitude = perlin_amplitude; // * (1 + (width / 2) * static_cast<double>(dist) / width / 2);
             }
         }
-        int pos = surfaceLine + noise * amplitude;
+        const int pos = surface_line + static_cast<int>(noise * amplitude);
 
-        surfaceHeights.push_back(pos);
+        surface_heights[i] = pos;
     }
 
     // Choose Cavern line (32-36% down)
-    int cavernLine = RandInt(height * 0.32, height * 0.36, eng);
+    const int cavern_line = Random::GetInt(static_cast<int>(height * 0.32), static_cast<int>(height * 0.36), eng);
     // double cavernScale = 0.02;
     // double cavernAmplitude = 10;
 
-    std::vector<int> cavernHeights;
-    cavernHeights.reserve(width);
+    std::vector cavern_heights(width, 0);
     for (int i = 0; i < width; ++i)
     {
-        cavernHeights.push_back(cavernLine);
+        cavern_heights[i] = cavern_line;
     }
 
     for (int col = 0; col < width; ++col)
     {
         for (int row = 0; row < height; ++row)
         {
-            if (row < surfaceHeights[col])
+            if (row < surface_heights[col])
             {
-                tiles[col][row].type = TileType::Air;
+                tiles[col][row].type = Tile::Type::Air;
             }
-            else if (row < cavernHeights[col])
+            else if (row < cavern_heights[col])
             {
-                tiles[col][row].type = TileType::Dirt;
+                tiles[col][row].type = Tile::Type::Dirt;
             }
             else
             {
-                tiles[col][row].type = TileType::Stone;
+                tiles[col][row].type = Tile::Type::Stone;
             }
         }
     }
@@ -160,18 +147,9 @@ World Generate(WorldSize size)
      * Big desert (+caves)
      */
 
-    auto end = std::chrono::high_resolution_clock::now();
-    auto elapsed = end - start;
-    fmt::print("Took {} years\n", elapsed.count());
+    const auto end = std::chrono::high_resolution_clock::now();
+    const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    fmt::print("Took {} ms\n", elapsed.count());
     return World{std::move(tiles)};
 }
-
-static void FillRow(std::vector<std::vector<Tile>> *tiles, int row, TileType type)
-{
-    for (int i = 0; i < tiles->size(); ++i)
-    {
-        (*tiles)[i][row].type = type;
-    }
-}
-
 } // namespace WorldGen

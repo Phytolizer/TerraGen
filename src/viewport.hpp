@@ -11,7 +11,7 @@ struct Viewport
     int dy;
     int width;
     int height;
-    int tileSize;
+    int tile_size;
     SDL_Window *window;
     SDL_Renderer *renderer;
 
@@ -22,8 +22,8 @@ struct Viewport
     Viewport &operator=(const Viewport &) = delete;
     Viewport &operator=(Viewport &&) = default;
 
-    void render(const World &world);
-    void move(int ddx, int ddy);
+    void Render(const World &world);
+    void Move(int ddx, int ddy);
 };
 
 #endif // TERRAGEN_VIEWPORT_HPP

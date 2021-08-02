@@ -6,7 +6,7 @@
 #include <stdexcept>
 
 Viewport::Viewport(int dx, int dy, int width, int height, int tileSize)
-    : dx{dx}, dy{dy}, width{width}, height{height}, tileSize{tileSize},
+    : dx{dx}, dy{dy}, width{width}, height{height}, tile_size{tileSize},
       window{SDL_CreateWindow("TerraGen", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height,
                               SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN)},
       renderer{SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC)}
@@ -32,17 +32,21 @@ Viewport::~Viewport()
 // width = viewport width moving right
 // height = viewport width moving down
 
-void Viewport::render(const World &world)
+void Viewport::Render(const World &world)
 {
-    for (int i = std::max(dx, 0); i < std::min<int>(world.tiles.size(), dx + width / tileSize); ++i)
+    for (int i = std::max(dx, 0); i < std::min<int>(world.tiles.size(), dx + width / tile_size); ++i)
     {
-        for (int j = std::max(dy, 0); j < std::min<int>(world.tiles[0].size(), dy + height / tileSize); ++j)
+        for (int j = std::max(dy, 0); j < std::min<int>(world.tiles[0].size(), dy + height / tile_size); ++j)
         {
-            SDL_Rect rect{(i - dx) * tileSize, (j - dy) * tileSize, tileSize, tileSize};
+            SDL_Rect rect{(i - dx) * tile_size, (j - dy) * tile_size, tile_size, tile_size};
 
-            auto color = TILE_COLORS.at(world.tiles.at(i).at(j).type);
-            SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+            const auto [r, g, b, a] = Tile::g_Colors.at(world.tiles.at(i).at(j).type);
+            SDL_SetRenderDrawColor(renderer, r, g, b, a);
             SDL_RenderFillRect(renderer, &rect);
         }
     }
+}
+
+void Viewport::Move(int ddx, int ddy)
+{
 }

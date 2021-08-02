@@ -1,11 +1,14 @@
-#ifndef TERRAGEN_TILE_HPP
-#define TERRAGEN_TILE_HPP
+#ifndef TILE_HPP_
+#define TILE_HPP_
 
 #include <SDL_video.h>
 #include <cstdint>
 #include <unordered_map>
 
-enum class TileType
+namespace Tile
+{
+
+enum class Type
 {
     SpaceAir,
     Air,
@@ -16,13 +19,15 @@ enum class TileType
     Underworld
 };
 
-extern std::unordered_map<TileType, SDL_Color> TILE_COLORS;
+extern std::unordered_map<Type, SDL_Color> g_Colors;
 
 struct Tile
 {
-    TileType type;
+    Type type;
     std::int64_t x;
     std::int64_t y;
 };
 
-#endif // TERRAGEN_TILE_HPP
+} // namespace Tile
+
+#endif // TILE_HPP_

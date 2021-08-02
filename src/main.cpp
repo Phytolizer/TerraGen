@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
                 break;
             }
         }
-        viewport.render(world);
+        viewport.Render(world);
         SDL_RenderPresent(viewport.renderer);
     }
     SDL_Quit();
