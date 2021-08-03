@@ -13,6 +13,7 @@ enum class Type
     SpaceAir,
     Air,
     Dirt,
+    Grass,
     Stone,
     Water,
     Lava,

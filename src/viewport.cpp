@@ -34,13 +34,13 @@ Viewport::~Viewport()
 
 void Viewport::Render(const World &world)
 {
-    for (int i = std::max(dx, 0); i < std::min<int>(world.tiles.size(), dx + width / tile_size); ++i)
+    for (int i = std::max(dx, 0); i < std::min<int>(world.width, dx + width / tile_size); ++i)
     {
-        for (int j = std::max(dy, 0); j < std::min<int>(world.tiles[0].size(), dy + height / tile_size); ++j)
+        for (int j = std::max(dy, 0); j < std::min<int>(world.height, dy + height / tile_size); ++j)
         {
             SDL_Rect rect{(i - dx) * tile_size, (j - dy) * tile_size, tile_size, tile_size};
 
-            const auto [r, g, b, a] = Tile::g_Colors.at(world.tiles.at(i).at(j).type);
+            const auto [r, g, b, a] = Tile::g_Colors.at(world.tiles.at(i + j * world.width).type);
             SDL_SetRenderDrawColor(renderer, r, g, b, a);
             SDL_RenderFillRect(renderer, &rect);
         }
@@ -49,4 +49,6 @@ void Viewport::Render(const World &world)
 
 void Viewport::Move(int ddx, int ddy)
 {
+    dx += ddx;
+    dy += ddy;
 }

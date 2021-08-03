@@ -1,8 +1,8 @@
 #include "world.hpp"
 
-World::World(std::vector<std::vector<Tile::Tile>> &&tiles) : tiles{std::move(tiles)}
+World::World(std::vector<Tile::Tile> &&tiles, std::size_t width, std::size_t height) : tiles{std::move(tiles)}, width{width}, height{height}
 {
-    switch (tiles.size())
+    switch (width)
     {
     case 1280:
         size = WorldSize::Tiny;

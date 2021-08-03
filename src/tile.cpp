@@ -5,6 +5,7 @@ std::unordered_map<Tile::Type, SDL_Color> Tile::g_Colors{
     {Type::SpaceAir, {0, 0, 139, 255}},
     {Type::Air, {145, 216, 250, 255}},
     {Type::Dirt, {155, 118, 83, 255}},
+    {Type::Grass, {27, 216, 94, 255}},
     {Type::Stone, {160, 160, 160, 255}},
     // Liquids
     {Type::Water, {30, 144, 255, 255}},
