@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.18)
-set(CMAKE_CXX_STANDARD 20)
 
 project(
   TerraGen
@@ -10,6 +9,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "src/*.[ch]pp")
 add_executable(${PROJECT_NAME} ${SOURCES})
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
 add_subdirectory(SDL)
 add_subdirectory(fmt)
