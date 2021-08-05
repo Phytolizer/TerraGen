@@ -27,5 +27,8 @@ class WorldGenerator
     void GenerateUnderground(std::vector<int> start, std::vector<int> end);
     void GenerateCavern(std::vector<int> start, std::vector<int> end);
     void GenerateClay(std::vector<int> start, std::vector<int> mid, std::vector<int> end);
+    void GenerateCaves(std::vector<int> undergroundStart);
+    void GenerateEntranceCaves(std::vector<int> surface);
+    void GenerateLargeCaves(std::vector<int> cavernStart);
     World Finish();
 };

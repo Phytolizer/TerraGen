@@ -242,6 +242,37 @@ void WorldGenerator::GenerateClay(std::vector<int> start, std::vector<int> mid, 
     }
 }
 
+constexpr double caveScale = 5;
+constexpr double caveCutoff = 0.65;
+void WorldGenerator::GenerateCaves(std::vector<int> undergroundStart)
+{
+    for (int x = 0; x < m_width; ++x)
+    {
+        for (int y = undergroundStart[x]; y < m_height; ++y)
+        {
+            double noise_scale_1 = m_random.GetNoise(x * caveScale * 1.5, y * caveScale);
+            double noise_scale_2 = m_random.GetNoise(x * caveScale, y * caveScale / 1.5) / 2;
+
+            double noise = noise_scale_1 + noise_scale_2;
+            if (noise > caveCutoff)
+            {
+                // Some caves should be water, some lava, and the rest air. How to disinguish caves?
+                m_tiles[x + m_width * y] = Tile{Tile::Type::Air};
+            }
+        }
+    }
+}
+
+void WorldGenerator::GenerateEntranceCaves(std::vector<int> surface)
+{
+
+}
+
+void WorldGenerator::GenerateLargeCaves(std::vector<int> cavernStart)
+{
+
+}
+
 World WorldGenerator::Finish()
 {
     return World{std::move(m_tiles), m_width, m_height};

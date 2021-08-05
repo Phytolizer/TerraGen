@@ -24,7 +24,7 @@ World Generate(const WorldSize size)
     int cavernHeight = world.GenerateHeight(0.33, 0.35);
     int underworldHeight = world.GenerateHeight(0.88, 0.90);
     auto surfaceHeights = world.GenerateTerrain(surfaceHeight, 1, 5);
-    auto undergroundHeights = world.GenerateTerrain(undergroundHeight, 1.5, 3.5);
+    auto undergroundHeights = world.GenerateTerrain(undergroundHeight, 1.5, 5);
     auto cavernHeights = world.GenerateTerrain(cavernHeight, 0.25, 6);
     auto underworldHeights = world.GenerateTerrain(underworldHeight, 0.6, 0.5);
     world.GenerateLayers(surfaceHeights, cavernHeights, underworldHeights);
@@ -38,6 +38,10 @@ World Generate(const WorldSize size)
     world.GenerateCavern(cavernHeights, underworldHeights);
     /// Add Clay
     world.GenerateClay(surfaceHeights, undergroundHeights, cavernHeights);
+    /// Generate Caves
+    //world.GenerateCaves(undergroundHeights);
+    //world.GenerateEntranceCaves(surfaceHeights);
+    //world.GenerateLargeCaves(cavernHeights);
 
     /* BIOMES
      * Forest
