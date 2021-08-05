@@ -3,6 +3,7 @@
 
 Random::Random(std::uint64_t seed) : m_eng{seed}
 {
+    m_randomModifier = seed;
 }
 
 double Random::GetDouble(const double min, const double max)
@@ -17,5 +18,9 @@ int Random::GetInt(const int min, const int max)
 
 double Random::GetNoise(int x, int y)
 {
-    return 0;
+    return m_noise.GetNoise<double>(x, y);
+}
+
+std::uint64_t Random::Next(){
+    return m_randomModifier++;
 }

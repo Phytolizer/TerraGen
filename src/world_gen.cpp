@@ -2,37 +2,32 @@
 #include "random.hpp"
 #include "world_generator.hpp"
 #include <FastNoiseLite.h>
-#include <chrono>
 
 namespace WorldGen
 {
 World Generate(const WorldSize size)
 {
-    const auto start = std::chrono::high_resolution_clock::now();
-    constexpr int seed = 100;
-    FastNoiseLite n;
-
+    constexpr std::uint64_t seed = 100;
     auto world = WorldGenerator{size, seed};
 
     /* Depth Contours
-     * 06% Space
-     * 18% Surface
-     *      - 12% Air
-     *      - 6% Ground
-     * 10% Underground
-     * 35% Cavern (Water)
-     * 20% Cavern (Lava)
-     * 11% Underworld
+     * 00% - 06% Space
+     * 06% - 18% Space
+     * 18% - 24% Surface
+     * 24% - 34% Underground
+     * 34% - 69% Cavern (Water)
+     * 69% - 89% Cavern (Lava)
+     * 89% - 100% Underworld
      */
-    int surfaceHeight = world.GenerateHeight(0.08, 0.11);
-    int undergroundHeight = world.GenerateHeight(0.18, 0.21);
-    int cavernHeight = world.GenerateHeight(0.27, 0.31);
-    int underworldHeight = world.GenerateHeight(0.85, 0.88);
-    auto surfaceHeights = world.GenerateTerrain(surfaceHeight);
-    auto undergroundHeights = world.GenerateTerrain(undergroundHeight);
-    auto cavernHeights = world.GenerateTerrain(cavernHeight);
-    auto underworldHeights = world.GenerateTerrain(underworldHeight);
-    world.GenerateLayers(surfaceHeights, cavernHeights);
+    int surfaceHeight = world.GenerateHeight(0.17, 0.19);
+    int undergroundHeight = world.GenerateHeight(0.21, 0.23);
+    int cavernHeight = world.GenerateHeight(0.33, 0.35);
+    int underworldHeight = world.GenerateHeight(0.88, 0.90);
+    auto surfaceHeights = world.GenerateTerrain(surfaceHeight, 1, 5);
+    auto undergroundHeights = world.GenerateTerrain(undergroundHeight, 1.5, 3.5);
+    auto cavernHeights = world.GenerateTerrain(cavernHeight, 0.25, 6);
+    auto underworldHeights = world.GenerateTerrain(underworldHeight, 0.6, 0.5);
+    world.GenerateLayers(surfaceHeights, cavernHeights, underworldHeights);
     /// Add Sand
     world.GenerateDeserts(surfaceHeights);
     world.GenerateSandPiles(undergroundHeight, cavernHeight);
