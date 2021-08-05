@@ -8,12 +8,12 @@
 
 struct World
 {
-    std::vector<Tile::Tile> tiles;
+    std::vector<Tile> tiles;
     std::size_t width;
     std::size_t height;
     WorldSize size;
 
-    explicit World(std::vector<Tile::Tile> &&tiles, std::size_t width, std::size_t height);
+    explicit World(std::vector<Tile> &&tiles, std::size_t width, std::size_t height);
 };
 
 #endif // TERRAGEN_WORLD_HPP
