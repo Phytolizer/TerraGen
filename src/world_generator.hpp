@@ -21,7 +21,7 @@ class WorldGenerator
     int GenerateHeight(double min, double max);
     std::vector<int> GenerateTerrain(int baseHeight, double scale, double amplitude);
     void GenerateLayers(std::vector<int> dirtLevel, std::vector<int> stoneLevel, std::vector<int> ashLevel);
-    void GenerateDeserts(std::vector<int> surfaceLevel);
+    void GenerateDeserts(int baseHeight, std::vector<int> surfaceLevel);
     void GenerateSandPiles(int start, int end);
     void GenerateSurface(std::vector<int> start, std::vector<int> end);
     void GenerateUnderground(std::vector<int> start, std::vector<int> end);

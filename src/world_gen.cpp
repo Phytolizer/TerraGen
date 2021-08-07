@@ -29,7 +29,7 @@ World Generate(const WorldSize size)
     auto underworldHeights = world.GenerateTerrain(underworldHeight, 0.6, 0.5);
     world.GenerateLayers(surfaceHeights, cavernHeights, underworldHeights);
     /// Add Sand
-    world.GenerateDeserts(surfaceHeights);
+    world.GenerateDeserts(surfaceHeight, surfaceHeights);
     world.GenerateSandPiles(undergroundHeight, cavernHeight);
     /// Mix Stone into Dirt
     world.GenerateSurface(surfaceHeights, undergroundHeights);

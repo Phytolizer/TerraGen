@@ -86,30 +86,25 @@ void WorldGenerator::GenerateLayers(std::vector<int> dirtLevel, std::vector<int>
     }
 }
 
-/// Choose a block on surface and create a circle. Set any block to Sand within circle
-void WorldGenerator::GenerateDeserts(std::vector<int> surfaceLevel)
+constexpr double desertScale = 1;
+constexpr double desertAmplitude = 30;
+void WorldGenerator::GenerateDeserts(int baseHeight, std::vector<int> surfaceLevel)
 {
-    int desertCount = m_random.GetInt(3, 6);
-    for (int i = 0; i < desertCount; ++i)
-    {
-        int loc = m_random.GetInt(0, m_width);
-        const double dist = std::abs(loc + 30 - static_cast<int>(m_width) / 2);
-        if (loc < 100 || loc > static_cast<int>(m_width) - 130 || dist < 60) {
-            i--;
-            continue;
+    int height = baseHeight - 10;
+    const int rand1 = m_random.Next();
+    const int rand2 = m_random.Next();
+    for (int x = 0; x < m_width; ++x) {
+        // Use a sine wave for the base noise level with random offset. This will remove tiny deserts. Keep secondary noise and dist for no desert at spawn
+        const int noise_scale_1 = floor(m_random.GetNoise(x * desertScale, rand1) * desertAmplitude);
+        const int noise_scale_2 = floor(m_random.GetNoise(x * desertScale / 2, rand2 / 2) * desertAmplitude / 2);
+        int depth = height + noise_scale_1 + noise_scale_2;
+        const double dist = std::abs(x - static_cast<int>(m_width) / 2);
+        if (dist < 100) {
+            depth -= dist / 50;
         }
-        int size = m_random.GetInt(40, 140);
-
-        for (int x = loc; x < loc + size; ++x)
-        {
-            if (x >= m_width) break;
-            if (x < 0) continue;
-            int h = surfaceLevel[x];
-            int depth = floor((size / 2 - std::abs(x - loc - static_cast<int>(size) / 2)) / 2);
-            for (int y = h; y < h + depth; ++y)
-            {
-                m_tiles[x + m_width * y] = Tile{Tile::Type::Sand};
-            }
+        if (depth < surfaceLevel[x]) { continue; }
+        for (int y = surfaceLevel[x]; y < depth; ++y) {
+            m_tiles[x + m_width * y] = Tile{Tile::Type::Sand};
         }
     }
 }
@@ -184,7 +179,7 @@ void WorldGenerator::GenerateUnderground(std::vector<int> start, std::vector<int
 }
 
 constexpr double cavernDirtScale = 16;
-constexpr double cavernDirtCutoff = 0.6;
+constexpr double cavernDirtCutoff = 0.65;
 void WorldGenerator::GenerateCavern(std::vector<int> start, std::vector<int> end)
 {
     int offset = m_random.Next();
