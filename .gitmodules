@@ -1,6 +1,6 @@
 [submodule "Terraria"]
 	path = Terraria
-	url = https://github.com/UTINKA/Terraria.git
+	url = https://github.com/Phytolizer/Terraria.git
 [submodule "SDL"]
 	path = SDL
 	url = https://github.com/libsdl-org/SDL.git
