@@ -14,7 +14,9 @@ class WorldGenerator
     std::size_t m_width;
     std::size_t m_height;
   private:
+    WorldSize m_size;
     std::vector<Tile> m_tiles;
+    std::vector<size_t> m_anthills;
     Random m_random;
 
   public:

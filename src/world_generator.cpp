@@ -7,6 +7,7 @@
 
 WorldGenerator::WorldGenerator(WorldSize size, std::uint64_t seed) : m_random{seed}
 {
+    m_size = size;
     switch (size)
     {
     case WorldSize::Tiny: //Old Mobile version only -- for testing whole world
@@ -38,8 +39,9 @@ std::vector<int> WorldGenerator::RandomTerrain(int minHeight, int maxHeight, dou
 {
     std::vector<int> terrainHeight(m_width);
 
-    const int r = m_random.Next();
     const int bounds = (int) ((minHeight - maxHeight) / 3);
+    const int r = m_random.Next();
+
     double height = m_random.GetInt(minHeight + bounds, maxHeight - bounds);
     double velocity = 0;
     double goal = height;
@@ -50,16 +52,20 @@ std::vector<int> WorldGenerator::RandomTerrain(int minHeight, int maxHeight, dou
     {
         if (--goalTimer <= 0) 
         {
+            // move goal to new location within min-max bounds
             goalTimer = m_random.GetInt(40, 120);
             double change = m_random.GetDouble(-amplitude * (2 + trend), amplitude * (2 - trend));
             if (goal + change < minHeight) change += 15;
             if (goal + change > maxHeight) change -= 15;
             goal += change;
+            // keep track of whether ground moves up or down in a row. Used to modify chances
             trend += goal > height ? 1 : -1;
         }
+        // Velocity moves towards the goal, only if velocity is small enough
         velocity = std::lerp(velocity, goal - height - velocity * 10, 0.01);
         height += velocity;
 
+        // Small noise to add to the height walk
         const double noise = m_random.GetNoise(x, r) * amplitude;
 
         if (height < minHeight) height = minHeight;
@@ -107,21 +113,49 @@ constexpr double sandPileScale = 1.6;
 constexpr double sandPileCutoff = 0.85;
 void WorldGenerator::GenerateSand(std::vector<int> top, int mid, std::vector<int> end)
 {
-    // Generate Deserts
-    const int rand1 = m_random.Next();
-    const int rand2 = m_random.Next();
-    for (int x = 0; x < m_width; ++x) {
-        // Use a sine wave for the base noise level with random offset. This will remove tiny deserts. Keep secondary noise and dist for no desert at spawn
-        const int noise_scale_1 = floor(m_random.GetNoise(x * desertScale, rand1) * desertAmplitude);
-        const int noise_scale_2 = floor(m_random.GetNoise(x * desertScale / 2, rand2 / 2) * desertAmplitude / 2);
-        int depth = top[x] + noise_scale_1 + noise_scale_2;
-        const double dist = std::abs(x - static_cast<int>(m_width) / 2);
-        if (dist < 100) {
-            depth -= dist / 50;
+    const int desertCount = m_random.GetInt(6, 10);
+    for (int i = 0; i < desertCount; ++i) {
+        int start;
+        if (i % 2 == 0)
+        {
+            // Left side of world
+            start = m_random.GetInt(50, m_width / 2 - 100);
         }
-        if (depth < top[x]) { continue; }
-        for (int y = top[x]; y < depth; ++y) {
-            m_tiles[x + m_width * y] = Tile{Tile::Type::Sand};
+        else
+        {
+            // Right side of world
+            start = m_random.GetInt(m_width / 2 + 50, m_width - 100);
+        }
+        int size = m_random.GetInt(30, 70);
+
+        int depth = top[start] + 5;
+        for (int x = start; x < start + size; ++x)
+        {
+            if (x < start + 10)
+            {
+                // Left side of desert, go deeper
+                depth += m_random.GetInt(0, 2);
+            }
+            else if (x > start + size - 10)
+            {
+                // Right side of desert, go shallower
+                depth += m_random.GetInt(-2, 0);
+            }
+            else
+            {
+                // Middle of desert, random walk
+                depth += m_random.GetInt(-1, 1);
+            }
+            
+            // Dont go too shallow
+            if (depth < top[x] + 5) {
+                depth += 2;
+            }
+
+            for (int y = top[x]; y < depth; ++y)
+            {
+                m_tiles[x + m_width * y] = Tile{Tile::Type::Sand};
+            }
         }
     }
     // Generate Sand Piles
@@ -148,7 +182,57 @@ void WorldGenerator::GenerateSand(std::vector<int> top, int mid, std::vector<int
 
 void WorldGenerator::GenerateAnthills(std::vector<int> surfaceTerrain)
 {
+    int anthillCount;
+    switch (m_size)
+    {
+    default:
+        anthillCount = 2;
+        break;
+    case WorldSize::Medium:
+        anthillCount = 3;
+        break;
+    case WorldSize::Large:
+        anthillCount = 4;
+        break;
+    }
+    for (int i = 0; i < anthillCount; ++i) {
+        int start;
+        int size;
+        do {
+            // Left side of world
+            if (i % 2 == 0) start = m_random.GetInt(50, m_width / 2 - 100);
+            // Right side of world
+            else start = m_random.GetInt(m_width / 2 + 50, m_width - 100);
+            // Size of anthill
+            size = m_random.GetInt(40, 60);
+        } while (m_tiles[start + m_width * surfaceTerrain[start]].type == Tile::Type::Sand
+                || m_tiles[start + size + m_width * surfaceTerrain[start + size]].type == Tile::Type::Sand);
+        
 
+        for (int x = start; x < start + size; ++x)
+        {
+            const int max = static_cast<int>(size) / 2;
+            int dist = std::abs((x - start) - max);
+            dist *= dist;
+            dist /= (max / 2);
+            dist = std::min(max, dist);
+            
+            const int base = surfaceTerrain[x];
+            const int high = surfaceTerrain[x] - (max - dist);
+            if (high > base) break;
+            for (int y = high; y <= base; ++y)
+            {
+                if (y == high)
+                {
+                    m_tiles[x + m_width * y] = Tile{Tile::Type::Grass};
+                }
+                else
+                {
+                    m_tiles[x + m_width * y] = Tile{Tile::Type::Dirt};
+                }
+            }
+        }
+    }
 }
 
 constexpr double surfaceStoneScale = 10;

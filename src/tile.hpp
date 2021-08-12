@@ -22,6 +22,21 @@ struct Tile
         Lava,
     };
 
+    enum class Liquid
+    {
+        Air,
+        Water,
+        Lava,
+        Honey,
+    };
+
+    enum class Wall
+    {
+        Air,
+        Dirt,
+        Grass,
+    };
+
     Type type;
     std::int64_t x;
     std::int64_t y;

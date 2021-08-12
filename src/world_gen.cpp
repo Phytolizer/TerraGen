@@ -31,7 +31,7 @@ World Generate(const WorldSize size)
     /// Add Tunnels
     world.GenerateSurfaceTunnels(surfaceTerrain);
     /// Add Sand
-    //world.GenerateSand(surfaceTerrain, surfaceLayer, rockHeights);
+    world.GenerateSand(surfaceTerrain, surfaceLayer, rockHeights);
     /// Add Anthills (Add Cave Entrances Later)
     world.GenerateAnthills(surfaceTerrain);
     /// Mix Stone into Dirt
