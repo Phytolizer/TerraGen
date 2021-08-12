@@ -1,5 +1,6 @@
 #include "world_generator.hpp"
 #include <algorithm>
+#include <cmath>
 #include <cstdlib>
 #include <math.h>
 #include <stdio.h>
@@ -33,63 +34,39 @@ int WorldGenerator::RandomHeight(double min, double max)
     return m_height * m_random.GetDouble(min, max);
 }
 
-constexpr double upDownLock = 0.75;
 std::vector<int> WorldGenerator::RandomTerrain(int minHeight, int maxHeight, double amplitude)
 {
     std::vector<int> terrainHeight(m_width);
 
-    const int r1 = m_random.Next();
-    const int r2 = m_random.Next();
-    const int r3 = m_random.Next();
-
-    double upDown = 0;
-    double height = m_random.GetInt(minHeight, maxHeight);
-
-    double amplitudeModifier = 0;
-    int amplitudeModifierChangeTimer = 0;
-
+    const int r = m_random.Next();
+    const int bounds = (int) ((minHeight - maxHeight) / 3);
+    double height = m_random.GetInt(minHeight + bounds, maxHeight - bounds);
+    double velocity = 0;
+    double goal = height;
+    int trend = 0;
+    int goalTimer = 0;
+    
     for (int x = 0; x < m_width; ++x)
     {
-        if (--amplitudeModifierChangeTimer <= 0)
+        if (--goalTimer <= 0) 
         {
-            amplitudeModifier += m_random.GetDouble(-0.5, 0.5);
-            amplitudeModifierChangeTimer = m_random.GetInt(50, 150);
+            goalTimer = m_random.GetInt(40, 120);
+            double change = m_random.GetDouble(-amplitude * (2 + trend), amplitude * (2 - trend));
+            if (goal + change < minHeight) change += 15;
+            if (goal + change > maxHeight) change -= 15;
+            goal += change;
+            trend += goal > height ? 1 : -1;
         }
-        const double dist = std::abs(x - static_cast<int>(m_width) / 2);
-        if (dist <= 50)
-        {
-            amplitudeModifier *= dist / 50;
-        }
-        
-        const double noise_scale_1 = m_random.GetNoise(x, r1);
-        const double noise_scale_2 = m_random.GetNoise(x / 2, r2) / 2;
-        const double noise_scale_4 = m_random.GetNoise(x / 4, r3) / 4;
+        velocity = std::lerp(velocity, goal - height - velocity * 10, 0.01);
+        height += velocity;
 
-        const double noise = noise_scale_1 + noise_scale_2 + noise_scale_4;
+        const double noise = m_random.GetNoise(x, r) * amplitude;
 
-        height += noise * amplitude * amplitudeModifier;
-
-        upDown += m_random.GetDouble(-0.025, 0.025);
-        if (height >= maxHeight - 2)
-        {
-            const double trend = m_random.GetDouble(0.05, 0.2);
-            upDown -= trend;
-            height -= trend;
-        }
-        if (height <= minHeight + 2)
-        {
-            const double trend = m_random.GetDouble(0.05, 0.2);
-            upDown += trend;
-            height += trend;
-        }
-        if (upDown > upDownLock) upDown = upDownLock;
-        if (upDown < -upDownLock) upDown = -upDownLock;
-        
         if (height < minHeight) height = minHeight;
         if (height > maxHeight) height = maxHeight;
-        terrainHeight[x] = (int) height;
+        terrainHeight[x] = (int) (height + noise);
     }
-    
+
     return terrainHeight;
 }
 
