@@ -11,38 +11,37 @@ World Generate(const WorldSize size)
     auto world = WorldGenerator{size, seed};
 
     /* Depth Contours
-     * 00% - 06% Space
-     * 06% - 18% Space
-     * 18% - 24% Surface
+     * 00% - 06% Sky
+     * 06% - 18% Overworld
+     * 18% - 24% Dirt
      * 24% - 34% Underground
      * 34% - 69% Cavern (Water)
      * 69% - 89% Cavern (Lava)
      * 89% - 100% Underworld
      */
-    int surfaceHeight = world.GenerateHeight(0.17, 0.19);
-    int undergroundHeight = world.GenerateHeight(0.21, 0.23);
-    int cavernHeight = world.GenerateHeight(0.33, 0.35);
-    int underworldHeight = world.GenerateHeight(0.88, 0.90);
-    auto surfaceHeights = world.GenerateTerrain(surfaceHeight, 1, 5);
-    auto undergroundHeights = world.GenerateTerrain(undergroundHeight, 1.5, 5);
-    auto cavernHeights = world.GenerateTerrain(cavernHeight, 0.25, 6);
-    auto underworldHeights = world.GenerateTerrain(underworldHeight, 0.6, 0.5);
-    world.GenerateLayers(surfaceHeights, cavernHeights, underworldHeights);
-    /// Add Sand
-    world.GenerateDeserts(surfaceHeight, surfaceHeights);
-    world.GenerateSandPiles(undergroundHeight, cavernHeight);
-    /// Mix Stone into Dirt
-    world.GenerateSurface(surfaceHeights, undergroundHeights);
-    world.GenerateUnderground(undergroundHeights, cavernHeights);
-    /// Mix Dirt into Stone
-    world.GenerateCavern(cavernHeights, underworldHeights);
-    /// Add Clay
-    world.GenerateClay(surfaceHeights, undergroundHeights, cavernHeights);
-    /// Generate Caves
-    //world.GenerateCaves(undergroundHeights);
-    //world.GenerateEntranceCaves(surfaceHeights);
-    //world.GenerateLargeCaves(cavernHeights);
+    const int surfaceLayer = world.RandomHeight(0.25, 0.26);
+    const int cavernLayer = world.RandomHeight(0.36, 0.38);
+    const int underworldLayer = world.m_height - 200;
 
+    auto surfaceTerrain = world.RandomTerrain(surfaceLayer - 125, surfaceLayer - 5, 5);
+    auto dirtHeights = world.RandomTerrain(surfaceLayer, surfaceLayer + 5, 3);
+    auto rockHeights = world.RandomTerrain(cavernLayer - 10, cavernLayer + 10, 4);
+
+    world.GenerateLayers(surfaceTerrain, rockHeights, underworldLayer);
+    /// Add Tunnels
+    world.GenerateSurfaceTunnels(surfaceTerrain);
+    /// Add Sand
+    world.GenerateSand(surfaceTerrain, surfaceLayer, rockHeights);
+    /// Add Anthills (Add Cave Entrances Later)
+    world.GenerateAnthills(surfaceTerrain);
+    /// Mix Stone into Dirt
+    world.GenerateSurfaceStone(surfaceTerrain, dirtHeights);
+    world.GenerateUndergroundStone(dirtHeights, rockHeights);
+    /// Mix Dirt into Stone
+    world.GenerateCavernDirt(rockHeights, underworldLayer);
+    /// Add Clay
+    world.GenerateClay(surfaceTerrain, dirtHeights, rockHeights);
+    
     /* BIOMES
      * Forest
      * Corruption/Crimson (mutually exclusive)
@@ -50,6 +49,12 @@ World Generate(const WorldSize size)
      * Desert
      * Big desert (+caves)
      */
+     
+    /// Generate Caves
+    //world.GenerateCaves(undergroundHeights);
+    //world.GenerateEntranceCaves(surfaceHeights);
+    //world.GenerateLargeCaves(cavernHeights);
+
     return world.Finish();
 }
 } // namespace WorldGen

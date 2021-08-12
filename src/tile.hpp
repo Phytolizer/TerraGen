@@ -7,6 +7,8 @@
 
 struct Tile
 {
+    // Flags 1
+    
     enum class Type
     {
         Air,

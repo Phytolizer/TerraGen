@@ -4,16 +4,16 @@ World::World(std::vector<Tile> &&tiles, std::size_t width, std::size_t height) :
 {
     switch (width)
     {
-    case 1280:
+    case 1750:
         size = WorldSize::Tiny;
         break;
-    case 8400:
+    case 4200:
         size = WorldSize::Small;
         break;
-    case 12800:
+    case 6400:
         size = WorldSize::Medium;
         break;
-    case 16800:
+    case 8400:
         size = WorldSize::Large;
         break;
     default:

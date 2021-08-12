@@ -10,25 +10,29 @@
 
 class WorldGenerator
 {
+  public:
+    std::size_t m_width;
+    std::size_t m_height;
+  private:
     std::vector<Tile> m_tiles;
     Random m_random;
 
-    std::size_t m_width;
-    std::size_t m_height;
-
   public:
     WorldGenerator(WorldSize size, std::uint64_t seed);
-    int GenerateHeight(double min, double max);
-    std::vector<int> GenerateTerrain(int baseHeight, double scale, double amplitude);
-    void GenerateLayers(std::vector<int> dirtLevel, std::vector<int> stoneLevel, std::vector<int> ashLevel);
-    void GenerateDeserts(int baseHeight, std::vector<int> surfaceLevel);
-    void GenerateSandPiles(int start, int end);
-    void GenerateSurface(std::vector<int> start, std::vector<int> end);
-    void GenerateUnderground(std::vector<int> start, std::vector<int> end);
-    void GenerateCavern(std::vector<int> start, std::vector<int> end);
+    int RandomHeight(double min, double max);
+    std::vector<int> RandomTerrain(int baseHeight, int maxHeight, double amplitude);
+
+    void GenerateLayers(std::vector<int> surfaceTerrain, std::vector<int> cavernLayer, int underworldLayer);
+    void GenerateSurfaceTunnels(std::vector<int> dirtLevel);
+    void GenerateSand(std::vector<int> surfaceTerrain, int dirtLevel, std::vector<int> rockHeights);
+    void GenerateAnthills(std::vector<int> surfaceTerrain);
+    void GenerateSurfaceStone(std::vector<int> start, std::vector<int> end);
+    void GenerateUndergroundStone(std::vector<int> start, std::vector<int> end);
+    void GenerateCavernDirt(std::vector<int> start, int end);
     void GenerateClay(std::vector<int> start, std::vector<int> mid, std::vector<int> end);
     void GenerateCaves(std::vector<int> undergroundStart);
     void GenerateEntranceCaves(std::vector<int> surface);
     void GenerateLargeCaves(std::vector<int> cavernStart);
+
     World Finish();
 };
