@@ -1,6 +1,8 @@
 #include "world_generator.hpp"
+#include <algorithm>
 #include <cstdlib>
 #include <math.h>
+#include <stdio.h>
 
 WorldGenerator::WorldGenerator(WorldSize size, std::uint64_t seed) : m_random{seed}
 {
@@ -31,31 +33,63 @@ int WorldGenerator::RandomHeight(double min, double max)
     return m_height * m_random.GetDouble(min, max);
 }
 
+constexpr double upDownLock = 0.75;
 std::vector<int> WorldGenerator::RandomTerrain(int minHeight, int maxHeight, double amplitude)
 {
     std::vector<int> terrainHeight(m_width);
-    double walk = 0;
+
+    const int r1 = m_random.Next();
+    const int r2 = m_random.Next();
+    const int r3 = m_random.Next();
+
+    double upDown = 0;
+    double height = m_random.GetInt(minHeight, maxHeight);
+
+    double amplitudeModifier = 0;
+    int amplitudeModifierChangeTimer = 0;
+
     for (int x = 0; x < m_width; ++x)
     {
-        const double noise_scale_1 = 1 + m_random.GetNoise(x, m_random.Next());
-        const double noise_scale_2 = 0.5 + m_random.GetNoise(x / 2, m_random.Next()) / 2;
-        const double noise_scale_4 = 0.25 + m_random.GetNoise(x / 4, m_random.Next()) / 4;
+        if (--amplitudeModifierChangeTimer <= 0)
+        {
+            amplitudeModifier += m_random.GetDouble(-0.5, 0.5);
+            amplitudeModifierChangeTimer = m_random.GetInt(50, 150);
+        }
+        const double dist = std::abs(x - static_cast<int>(m_width) / 2);
+        if (dist <= 50)
+        {
+            amplitudeModifier *= dist / 50;
+        }
+        
+        const double noise_scale_1 = m_random.GetNoise(x, r1);
+        const double noise_scale_2 = m_random.GetNoise(x / 2, r2) / 2;
+        const double noise_scale_4 = m_random.GetNoise(x / 4, r3) / 4;
 
         const double noise = noise_scale_1 + noise_scale_2 + noise_scale_4;
 
-        const double dist = std::abs(x - static_cast<int>(m_width) / 2);
+        height += noise * amplitude * amplitudeModifier;
 
-        double amp = 0;
-        if (dist > 30 && dist <= 60){
-            amp = (dist - 30) / 30;
-        } else if (dist > 60){
-            amp = 1;
+        upDown += m_random.GetDouble(-0.025, 0.025);
+        if (height >= maxHeight - 2)
+        {
+            const double trend = m_random.GetDouble(0.05, 0.2);
+            upDown -= trend;
+            height -= trend;
         }
-
-        const double offset = noise * amp * amplitude;
-
-        terrainHeight[x] = minHeight + offset;
+        if (height <= minHeight + 2)
+        {
+            const double trend = m_random.GetDouble(0.05, 0.2);
+            upDown += trend;
+            height += trend;
+        }
+        if (upDown > upDownLock) upDown = upDownLock;
+        if (upDown < -upDownLock) upDown = -upDownLock;
+        
+        if (height < minHeight) height = minHeight;
+        if (height > maxHeight) height = maxHeight;
+        terrainHeight[x] = (int) height;
     }
+    
     return terrainHeight;
 }
 

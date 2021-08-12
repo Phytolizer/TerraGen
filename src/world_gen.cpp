@@ -7,7 +7,7 @@ namespace WorldGen
 {
 World Generate(const WorldSize size)
 {
-    constexpr std::uint64_t seed = 100;
+    constexpr std::uint64_t seed = 999;
     auto world = WorldGenerator{size, seed};
 
     /* Depth Contours
@@ -23,9 +23,9 @@ World Generate(const WorldSize size)
     const int cavernLayer = world.RandomHeight(0.36, 0.38);
     const int underworldLayer = world.m_height - 200;
 
-    auto surfaceTerrain = world.RandomTerrain(surfaceLayer - 125, surfaceLayer - 5, 5);
-    auto dirtHeights = world.RandomTerrain(surfaceLayer, surfaceLayer + 5, 3);
-    auto rockHeights = world.RandomTerrain(cavernLayer - 10, cavernLayer + 10, 4);
+    auto surfaceTerrain = world.RandomTerrain(surfaceLayer - 125, surfaceLayer - 5, 2);
+    auto dirtHeights = world.RandomTerrain(surfaceLayer, surfaceLayer + 5, 1);
+    auto rockHeights = world.RandomTerrain(cavernLayer - 10, cavernLayer + 10, 1.5);
 
     world.GenerateLayers(surfaceTerrain, rockHeights, underworldLayer);
     /// Add Tunnels
