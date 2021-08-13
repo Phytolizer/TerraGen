@@ -5,10 +5,9 @@
 #include <cstdint>
 #include <unordered_map>
 
-struct Tile
+class Tile
 {
-    // Flags 1
-    
+    public:
     enum class Type
     {
         Air,
@@ -18,18 +17,23 @@ struct Tile
         Clay,
         Stone,
         Ash,
-        Water,
-        Lava,
     };
-
+    enum class Style
+    {
+        Full,
+        HalfBrick,
+        SlopeTopRight,
+        SlopeTopLeft,
+        SlopeBottomRight,
+        SlopeBottomLeft,
+    };
     enum class Liquid
     {
-        Air,
+        None,
         Water,
         Lava,
         Honey,
     };
-
     enum class Wall
     {
         Air,
@@ -37,11 +41,22 @@ struct Tile
         Grass,
     };
 
-    Type type;
-    std::int64_t x;
-    std::int64_t y;
+  public:
+    Type m_type;
+    Liquid m_liquid;
+    double m_liquidLevel;
+    Wall m_wall;
+    
+  public:
+    Tile();
+    void SetTile(Type type);
+    void SetLiquid(Liquid liquid);
+    void SetWall(Wall wall);
+    SDL_Color GetColor();
 };
 
-extern std::unordered_map<Tile::Type, SDL_Color> g_Colors;
+extern std::unordered_map<Tile::Type, SDL_Color> t_Colors;
+extern std::unordered_map<Tile::Liquid, SDL_Color> l_Colors;
+extern std::unordered_map<Tile::Wall, SDL_Color> w_Colors;
 
 #endif // TILE_HPP_

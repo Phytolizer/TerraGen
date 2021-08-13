@@ -40,7 +40,8 @@ void Viewport::Render(const World &world)
         {
             SDL_Rect rect{(i - dx) * tile_size, (j - dy) * tile_size, tile_size, tile_size};
 
-            const auto [r, g, b, a] = g_Colors.at(world.tiles.at(i + j * world.width).type);
+            Tile tile = world.tiles.at(i + j * world.width);
+            const auto [r, g, b, a] = tile.GetColor();
             SDL_SetRenderDrawColor(renderer, r, g, b, a);
             SDL_RenderFillRect(renderer, &rect);
         }

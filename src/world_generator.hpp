@@ -21,11 +21,14 @@ class WorldGenerator
 
   public:
     WorldGenerator(WorldSize size, std::uint64_t seed);
+    void SetTile(int x, int y, Tile::Type type);
+    void SetWall(int x, int y, Tile::Wall wall);
+    bool IsTile(int x, int y, Tile::Type type);
     int RandomHeight(double min, double max);
     std::vector<int> RandomTerrain(int baseHeight, int maxHeight, double amplitude);
 
     void GenerateLayers(std::vector<int> surfaceTerrain, std::vector<int> cavernLayer, int underworldLayer);
-    void GenerateSurfaceTunnels(std::vector<int> dirtLevel);
+    void GenerateSurfaceTunnels(std::vector<int> surfaceTerrain);
     void GenerateSand(std::vector<int> surfaceTerrain, int dirtLevel, std::vector<int> rockHeights);
     void GenerateAnthills(std::vector<int> surfaceTerrain);
     void GenerateSurfaceStone(std::vector<int> start, std::vector<int> end);

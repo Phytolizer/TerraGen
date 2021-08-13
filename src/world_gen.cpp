@@ -1,7 +1,7 @@
 #include "world_gen.hpp"
-#include "random.hpp"
 #include "world_generator.hpp"
 #include <FastNoiseLite.h>
+#include "random.hpp"
 
 namespace WorldGen
 {

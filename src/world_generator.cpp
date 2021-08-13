@@ -27,7 +27,22 @@ WorldGenerator::WorldGenerator(WorldSize size, std::uint64_t seed) : m_random{se
         m_height = 2400; //2317
         break; //20,160,000 tiles
     }
-    m_tiles.resize(m_width * m_height);
+    m_tiles.resize(m_width * m_height, Tile());
+}
+
+// Own Function to Set Tiles because Tile Class most likely will change often
+void WorldGenerator::SetTile(int x, int y, Tile::Type type)
+{
+    m_tiles[x + m_width * y].m_type = type;
+}
+void WorldGenerator::SetWall(int x, int y, Tile::Wall wall)
+{
+    m_tiles[x + m_width * y].m_wall = wall;
+}
+
+bool WorldGenerator::IsTile(int x, int y, Tile::Type type)
+{
+    return m_tiles[x + m_width * y].m_type == type;
 }
 
 int WorldGenerator::RandomHeight(double min, double max)
@@ -82,29 +97,69 @@ void WorldGenerator::GenerateLayers(std::vector<int> dirtLevel, std::vector<int>
     {
         int dirt = dirtLevel[x];
         int stone = stoneLevel[x];
+        Tile tile;
         for (int y = 0; y < dirt; ++y)
         {
-            m_tiles[x + m_width * y] = Tile{Tile::Type::Air};
+            SetTile(x, y, Tile::Type::Air);
         }
-        m_tiles[x + m_width * dirt] = Tile{Tile::Type::Grass};
+        SetTile(x, dirt, Tile::Type::Grass);
         for (int y = dirt + 1; y < stone; ++y)
         {
-            m_tiles[x + m_width * y] = Tile{Tile::Type::Dirt};
+            SetTile(x, y, Tile::Type::Dirt);
         }
         for (int y = stone; y < ashLevel; ++y)
         {
-            m_tiles[x + m_width * y] = Tile{Tile::Type::Stone};
+            SetTile(x, y, Tile::Type::Stone);
         }
         for (int y = ashLevel; y < m_height; ++y)
         {
-            m_tiles[x + m_width * y] = Tile{Tile::Type::Ash};
+            SetTile(x, y, Tile::Type::Ash);
         }
     }
 }
 
-void WorldGenerator::GenerateSurfaceTunnels(std::vector<int> dirtLevel)
+void WorldGenerator::GenerateSurfaceTunnels(std::vector<int> surfaceTerrain)
 {
+    const int tunnelCount = m_random.GetInt(6, 10);
+    const int r1 = m_random.Next();
+    const int r2 = m_random.Next();
+    for (int i = 0; i < tunnelCount; ++i) {
+        int start;
+        // Left side of world
+        if (i % 2 == 0) start = m_random.GetInt(50, m_width / 2 - 100);
+        // Right side of world
+        else start = m_random.GetInt(m_width / 2 + 50, m_width - 100);
+        
+        int size = m_random.GetInt(30, 50);
 
+        const int spacing = 6;
+        for (int x = start; x < start + size; ++x)
+        {
+            int above = (m_random.GetNoise(x, r1) - 1.25) * 1.5 - 1;
+            int below = (m_random.GetNoise(x, r2) + 1.25) * 1.5 + 1;
+
+            if (x == start || x == start + size - 1) {
+                above++;
+                below--;
+            }
+            int height = surfaceTerrain[x] - spacing;
+            for (int y = height + above; y < height + below; ++y)
+            {
+                if (y == height + above || y == height + below - 1)
+                {
+                    SetTile(x, y, Tile::Type::Grass);
+                }
+                else
+                {
+                    SetTile(x, y, Tile::Type::Dirt);
+                }
+            }
+            for (int y = height + below; y < surfaceTerrain[x]; ++y)
+            {
+                SetWall(x, y, Tile::Wall::Dirt);
+            }
+        }
+    }
 }
 
 constexpr double desertScale = 1;
@@ -116,45 +171,29 @@ void WorldGenerator::GenerateSand(std::vector<int> top, int mid, std::vector<int
     const int desertCount = m_random.GetInt(6, 10);
     for (int i = 0; i < desertCount; ++i) {
         int start;
-        if (i % 2 == 0)
-        {
-            // Left side of world
-            start = m_random.GetInt(50, m_width / 2 - 100);
-        }
-        else
-        {
-            // Right side of world
-            start = m_random.GetInt(m_width / 2 + 50, m_width - 100);
-        }
+        // Left side of world
+        if (i % 2 == 0) start = m_random.GetInt(50, m_width / 2 - 100);
+        // Right side of world
+        else start = m_random.GetInt(m_width / 2 + 50, m_width - 100);
+
         int size = m_random.GetInt(30, 70);
 
         int depth = top[start] + 5;
         for (int x = start; x < start + size; ++x)
         {
-            if (x < start + 10)
-            {
-                // Left side of desert, go deeper
-                depth += m_random.GetInt(0, 2);
-            }
-            else if (x > start + size - 10)
-            {
-                // Right side of desert, go shallower
-                depth += m_random.GetInt(-2, 0);
-            }
-            else
-            {
-                // Middle of desert, random walk
-                depth += m_random.GetInt(-1, 1);
-            }
+            // Left side of desert, go deeper
+            if (x < start + 10) depth += m_random.GetInt(0, 2);
+            // Right side of desert, go shallower
+            else if (x > start + size - 10) depth += m_random.GetInt(-2, 0);
+            // Middle of desert, random walk
+            else depth += m_random.GetInt(-1, 1);
             
             // Dont go too shallow
-            if (depth < top[x] + 5) {
-                depth += 2;
-            }
+            if (depth < top[x] + 5) depth += 2;
 
             for (int y = top[x]; y < depth; ++y)
             {
-                m_tiles[x + m_width * y] = Tile{Tile::Type::Sand};
+                SetTile(x, y, Tile::Type::Sand);
             }
         }
     }
@@ -174,7 +213,7 @@ void WorldGenerator::GenerateSand(std::vector<int> top, int mid, std::vector<int
             }
             if (noise > sandPileCutoff)
             {
-                m_tiles[x + m_width * y] = Tile{Tile::Type::Sand};
+                SetTile(x, y, Tile::Type::Sand);
             }
         }
     }
@@ -205,8 +244,7 @@ void WorldGenerator::GenerateAnthills(std::vector<int> surfaceTerrain)
             else start = m_random.GetInt(m_width / 2 + 50, m_width - 100);
             // Size of anthill
             size = m_random.GetInt(40, 60);
-        } while (m_tiles[start + m_width * surfaceTerrain[start]].type == Tile::Type::Sand
-                || m_tiles[start + size + m_width * surfaceTerrain[start + size]].type == Tile::Type::Sand);
+        } while (IsTile(start, surfaceTerrain[start], Tile::Type::Sand) || IsTile(start + size, surfaceTerrain[start + size], Tile::Type::Sand));
         
 
         for (int x = start; x < start + size; ++x)
@@ -224,11 +262,11 @@ void WorldGenerator::GenerateAnthills(std::vector<int> surfaceTerrain)
             {
                 if (y == high)
                 {
-                    m_tiles[x + m_width * y] = Tile{Tile::Type::Grass};
+                    SetTile(x, y, Tile::Type::Grass);
                 }
                 else
                 {
-                    m_tiles[x + m_width * y] = Tile{Tile::Type::Dirt};
+                    SetTile(x, y, Tile::Type::Dirt);
                 }
             }
         }
@@ -247,9 +285,9 @@ void WorldGenerator::GenerateSurfaceStone(std::vector<int> start, std::vector<in
             if (noise > surfaceStoneCutoff)
             {
                 int pos = x + m_width * y;
-                switch (m_tiles[pos].type) {
+                switch (m_tiles[pos].m_type) {
                     case Tile::Type::Dirt:
-                        m_tiles[pos] = Tile{Tile::Type::Stone};
+                        SetTile(x, y, Tile::Type::Stone);
                     default:
                         break;
                 };
@@ -273,7 +311,7 @@ void WorldGenerator::GenerateUndergroundStone(std::vector<int> start, std::vecto
             const double noise = noise_scale_1 + noise_scale_2 + noise_scale_4;
             if (noise > undergroundStoneCutoff)
             {
-                m_tiles[x + m_width * y] = Tile{Tile::Type::Stone};
+                SetTile(x, y, Tile::Type::Stone);
             }
         }
     }
@@ -297,7 +335,7 @@ void WorldGenerator::GenerateCavernDirt(std::vector<int> start, int end)
             const double cutoff_noise = m_random.GetNoise(x * 2, y * 2) / 4;
             if (noise > cavernDirtCutoff + cutoff_noise)
             {
-                m_tiles[x + m_width * y] = Tile{Tile::Type::Dirt};
+                SetTile(x, y, Tile::Type::Dirt);
             }
         }
     }
@@ -318,10 +356,10 @@ void WorldGenerator::GenerateClay(std::vector<int> start, std::vector<int> mid, 
                 continue;
             }
             int pos = x + m_width * y;
-                switch (m_tiles[pos].type) {
+                switch (m_tiles[pos].m_type) {
                     case Tile::Type::Dirt:
                     case Tile::Type::Stone:
-                        m_tiles[pos] = Tile{Tile::Type::Clay};
+                        SetTile(x, y, Tile::Type::Clay);
                     default:
                         break;
                 };
@@ -333,7 +371,7 @@ void WorldGenerator::GenerateClay(std::vector<int> start, std::vector<int> mid, 
             {
                 continue;
             }
-            m_tiles[x + m_width * y] = Tile{Tile::Type::Clay};
+            SetTile(x, y, Tile::Type::Clay);
         }
     }
 }
@@ -353,7 +391,7 @@ void WorldGenerator::GenerateCaves(std::vector<int> undergroundStart)
             if (noise > caveCutoff)
             {
                 // Some caves should be water, some lava, and the rest air. How to disinguish caves?
-                m_tiles[x + m_width * y] = Tile{Tile::Type::Air};
+                SetTile(x, y, Tile::Type::Air);
             }
         }
     }

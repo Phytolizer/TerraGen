@@ -3,8 +3,6 @@
 
 #include "world.hpp"
 #include "world_size.hpp"
-#include <FastNoiseLite.h>
-#include <random>
 
 namespace WorldGen
 {
