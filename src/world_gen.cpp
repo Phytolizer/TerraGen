@@ -29,6 +29,7 @@ World Generate(const WorldSize size)
     auto dirtHeights = world.RandomTerrain(surfaceLayer, surfaceLayer + 10, 2);
     auto rockHeights = world.RandomTerrain(cavernLayer - 5, cavernLayer + 5, 2.5);
 
+    world.GenerateDepthLevels(surfaceLayer, cavernLayer, underworldLayer);
     world.GenerateLayers(surfaceTerrain, rockHeights, underworldLayer);
     /// Add Tunnels with walls
     world.GenerateSurfaceTunnels(surfaceTerrain);
@@ -48,9 +49,9 @@ World Generate(const WorldSize size)
      * Rock Layer Caves (Large expansive caves, some water some lava)
      * Surface Caves (Caves from the surface -- entrance caves -- large, winding)
      */
-    //world.GenerateCaves(undergroundHeights);
-    //world.GenerateEntranceCaves(surfaceHeights);
-    //world.GenerateLargeCaves(cavernHeights);
+    world.GenerateCaves(dirtHeights);
+    world.GenerateEntranceCaves(surfaceTerrain);
+    world.GenerateLargeCaves(rockHeights);
 
     /// Add Clay
     world.GenerateClay(surfaceTerrain, dirtHeights, rockHeights);
@@ -75,7 +76,7 @@ World Generate(const WorldSize size)
     
 
     /// Add Metals
-    world.GenerateMetals(surfaceTerrain, (surfaceLayer + cavernLayer) / 2, underworldLayer);
+    world.GenerateMetals(surfaceTerrain, surfaceLayer, cavernLayer, underworldLayer);
     /// Add Gems
     world.GenerateGems(surfaceLayer, underworldLayer);
     /// Add Webs

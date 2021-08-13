@@ -23,14 +23,17 @@ class WorldGenerator
     void SetTile(int x, int y, Tile::Type type);
     void SetWall(int x, int y, Tile::Wall wall);
     void SetLiquid(int x, int y, Tile::Liquid liquid);
+    void SetDepth(int x, int y, Tile::Depth depth);
     bool IsTile(int x, int y, Tile::Type type);
     bool IsWall(int x, int y, Tile::Wall wall);
     bool IsLiquid(int x, int y, Tile::Liquid liquid);
+    void FillBlob(int x, int y, Tile::Type type, double radius, double variation, bool replaceAir = false, bool overrideBlocks = true);
     int RandomHeight(double min, double max);
     std::vector<int> RandomTerrain(int baseHeight, int maxHeight, double amplitude);
 
     // World Setup
-    void GenerateLayers(std::vector<int> surfaceTerrain, std::vector<int> cavernLayer, int underworldLayer);
+    void GenerateDepthLevels(int surface, int cavern, int underworld);
+    void GenerateLayers(std::vector<int> surfaceTerrain, std::vector<int> cavernTerrain, int ash);
     void GenerateSurfaceTunnels(std::vector<int> surfaceTerrain);
     void GenerateSand(std::vector<int> surfaceTerrain, int dirtLevel, std::vector<int> rockHeights);
     std::vector<int> GenerateAnthills(std::vector<int> surfaceTerrain);
@@ -48,7 +51,7 @@ class WorldGenerator
     void GenerateSilt(int start, int end);
     // Biomes Part 1
     // Metals, Gems, and Webs
-    void GenerateMetals(std::vector<int> surface, int underground, int underworld);
+    void GenerateMetals(std::vector<int> surface, int underground, int cavern, int underworld);
     void GenerateGems(int start, int end);
     void GenerateWebs(int start, int end);
     // Biomes Part 2

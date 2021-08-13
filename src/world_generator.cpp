@@ -47,6 +47,10 @@ void WorldGenerator::SetLiquid(int x, int y, Tile::Liquid liquid)
 {
     m_tiles[x + m_width * y].m_liquid = liquid;
 }
+void WorldGenerator::SetDepth(int x, int y, Tile::Depth depth)
+{
+    m_tiles[x + m_width * y].m_depth = depth;
+}
 bool WorldGenerator::IsTile(int x, int y, Tile::Type type)
 {
     return m_tiles[x + m_width * y].m_type == type;
@@ -58,6 +62,29 @@ bool WorldGenerator::IsWall(int x, int y, Tile::Wall wall)
 bool WorldGenerator::IsLiquid(int x, int y, Tile::Liquid liquid)
 {
     return m_tiles[x + m_width * y].m_liquid == liquid;
+}
+
+void WorldGenerator::FillBlob(int i, int j, Tile::Type type, double radius, double variation, bool replaceAir, bool overrideBlocks)
+{
+    int r = (int) (radius / 2);
+    for (int x = i - r; x < i + r; ++x)
+    {
+        for (int y = j - r; y < j + r; ++y)
+        {
+            double distance = std::sqrt((double) pow(x - i, 2) + pow(y - j, 2));
+            distance *= 2 / radius;
+            double rand = m_random.GetDouble(0, variation);
+            
+            // Distance is the distance from 0 (center) to 1 (max radius)
+            // Rand is a random value based on variation
+            double check = distance + rand;
+            bool isAir = IsTile(x, y, Tile::Type::Air);
+            if (replaceAir && isAir || overrideBlocks && !isAir)
+            {
+                if (check < 1) SetTile(x, y, type);
+            }
+        }
+    }
 }
 
 // Helper Functions
@@ -111,12 +138,40 @@ std::vector<int> WorldGenerator::RandomTerrain(int minHeight, int maxHeight, dou
 
 // World Setup
 #pragma region WorldSetup
-void WorldGenerator::GenerateLayers(std::vector<int> dirtLevel, std::vector<int> stoneLevel, int ashLevel)
+void WorldGenerator::GenerateDepthLevels(int surface, int cavern, int underworld)
+{
+    const int space = surface * 0.35;
+    for (int x = 0; x < m_width; ++x)
+    {
+        for (int y = 0; y < space; ++y)
+        {
+            SetDepth(x, y, Tile::Depth::Space);
+        }
+        for (int y = space; y < surface; ++y)
+        {
+            SetDepth(x, y, Tile::Depth::Overworld);
+        }
+        for (int y = surface; y < cavern; ++y)
+        {
+            SetDepth(x, y, Tile::Depth::Underground);
+        }
+        for (int y = cavern; y < underworld; ++y)
+        {
+            SetDepth(x, y, Tile::Depth::Cavern);
+        }
+        for (int y = underworld; y < m_height; ++y)
+        {
+            SetDepth(x, y, Tile::Depth::Underworld);
+        }
+    }
+}
+
+void WorldGenerator::GenerateLayers(std::vector<int> dirtTerrain, std::vector<int> stoneTerrain, int ash)
 {
     for (int x = 0; x < m_width; ++x)
     {
-        int dirt = dirtLevel[x];
-        int stone = stoneLevel[x];
+        const int dirt = dirtTerrain[x];
+        const int stone = stoneTerrain[x];
         Tile tile;
         for (int y = 0; y < dirt; ++y)
         {
@@ -127,11 +182,11 @@ void WorldGenerator::GenerateLayers(std::vector<int> dirtLevel, std::vector<int>
         {
             SetTile(x, y, Tile::Type::Dirt);
         }
-        for (int y = stone; y < ashLevel; ++y)
+        for (int y = stone; y < ash; ++y)
         {
             SetTile(x, y, Tile::Type::Stone);
         }
-        for (int y = ashLevel; y < m_height; ++y)
+        for (int y = ash; y < m_height; ++y)
         {
             SetTile(x, y, Tile::Type::Ash);
         }
@@ -400,9 +455,25 @@ void WorldGenerator::GenerateEntranceCaves(std::vector<int> surface)
 
 }
 
+constexpr double largeCaveScale = 4;
+constexpr double largeCaveCutoff = 0.7;
 void WorldGenerator::GenerateLargeCaves(std::vector<int> cavernStart)
 {
+    for (int x = 0; x < m_width; ++x)
+    {
+        for (int y = cavernStart[x]; y < m_height; ++y)
+        {
+            double noise_scale_1 = m_random.GetNoise(x * largeCaveScale, y * largeCaveScale);
+            double noise_scale_2 = m_random.GetNoise(x * largeCaveScale / 2, y * largeCaveScale / 2) / 2;
 
+            double noise = noise_scale_1 + noise_scale_2;
+            if (noise > largeCaveCutoff)
+            {
+                // Some caves should be water, some lava, and the rest air. How to disinguish caves?
+                SetTile(x, y, Tile::Type::Air);
+            }
+        }
+    }
 }
 #pragma endregion Caves
 
@@ -504,9 +575,67 @@ void WorldGenerator::GenerateSilt(int start, int end)
 
 // Metals, Gems, and Webs
 #pragma region Shinies
-void WorldGenerator::GenerateMetals(std::vector<int> surface, int underground, int underworld)
+void WorldGenerator::GenerateMetals(std::vector<int> surface, int underground, int cavern, int underworld)
 {
-
+    int cavernRadius = (underground + cavern) / 2 - underground;
+    // COPPER
+    for (int i = 0; i < (int)((double) m_tiles.size() * 6E-05); ++i)
+    {
+        const int x = m_random.GetInt(0, m_width);
+        const int y = m_random.GetInt(surface[x], underground);
+        FillBlob(x, y, Tile::Type::Copper, m_random.GetDouble(3, 6), m_random.GetDouble(0.1, 0.4));
+    }
+    for (int i = 0; i < (int)((double) m_tiles.size() * 8E-05); ++i)
+    {
+        const int x = m_random.GetInt(0, m_width);
+        const int y = m_random.GetInt(underground, cavern + cavernRadius);
+        FillBlob(x, y, Tile::Type::Copper, m_random.GetDouble(3, 7), m_random.GetDouble(0.1, 0.4));
+    }
+    for (int i = 0; i < (int)((double) m_tiles.size() * 0.0002); ++i)
+    {
+        const int x = m_random.GetInt(0, m_width);
+        const int y = m_random.GetInt(cavern - cavernRadius, underworld);
+        FillBlob(x, y, Tile::Type::Copper, m_random.GetDouble(4, 9), m_random.GetDouble(0.1, 0.4));
+    }
+    // IRON
+    for (int i = 0; i < (int)((double) m_tiles.size() * 8E-05); ++i)
+    {
+        const int x = m_random.GetInt(0, m_width);
+        const int y = m_random.GetInt(surface[x], underground);
+        FillBlob(x, y, Tile::Type::Iron, m_random.GetDouble(3, 7), m_random.GetDouble(0.1, 0.4));
+    }
+    for (int i = 0; i < (int)((double) m_tiles.size() * 0.0002); ++i)
+    {
+        const int x = m_random.GetInt(0, m_width);
+        const int y = m_random.GetInt(underground, cavern + cavernRadius);
+        FillBlob(x, y, Tile::Type::Iron, m_random.GetDouble(3, 6), m_random.GetDouble(0.1, 0.4));
+    }
+    for (int i = 0; i < (int)((double) m_tiles.size() * 2.6E-05); ++i)
+    {
+        const int x = m_random.GetInt(0, m_width);
+        const int y = m_random.GetInt(cavern - cavernRadius, underworld);
+        FillBlob(x, y, Tile::Type::Iron, m_random.GetDouble(4, 9), m_random.GetDouble(0.1, 0.4));
+    }
+    // SILVER
+    for (int i = 0; i < (int)((double) m_tiles.size() * 2.6E-05); ++i)
+    {
+        const int x = m_random.GetInt(0, m_width);
+        const int y = m_random.GetInt(underground, cavern + cavernRadius);
+        FillBlob(x, y, Tile::Type::Silver, m_random.GetDouble(3, 6), m_random.GetDouble(0.1, 0.4));
+    }
+    for (int i = 0; i < (int)((double) m_tiles.size() * 0.00015); ++i)
+    {
+        const int x = m_random.GetInt(0, m_width);
+        const int y = m_random.GetInt(cavern - cavernRadius, underworld);
+        FillBlob(x, y, Tile::Type::Silver, m_random.GetDouble(4, 9), m_random.GetDouble(0.1, 0.4));
+    }
+    // GOLD
+    for (int i = 0; i < (int)((double) m_tiles.size() * 0.00012); ++i)
+    {
+        const int x = m_random.GetInt(0, m_width);
+        const int y = m_random.GetInt(cavern - cavernRadius, underworld);
+        FillBlob(x, y, Tile::Type::Gold, m_random.GetDouble(4, 8), m_random.GetDouble(0.1, 0.4));
+    }
 }
 
 void WorldGenerator::GenerateGems(int start, int end)
