@@ -35,7 +35,7 @@ World Generate(const WorldSize size)
     /// Add Sand
     world.GenerateSand(surfaceTerrain, surfaceLayer, rockHeights);
     /// Add Anthills (Mountains with Caves)
-    world.GenerateAnthills(surfaceTerrain);
+    auto anthillCavePos = world.GenerateAnthills(surfaceTerrain);
     /// Mix Stone into Dirt
     world.GenerateSurfaceStone(surfaceTerrain, dirtHeights);
     world.GenerateUndergroundStone(dirtHeights, rockHeights);
@@ -54,10 +54,12 @@ World Generate(const WorldSize size)
 
     /// Add Clay
     world.GenerateClay(surfaceTerrain, dirtHeights, rockHeights);
+    /// Add Grass
+    world.GenerateGrass(surfaceTerrain, surfaceLayer);
     /// Add Mud (Long, veiny stretches of mud. Thin and wiggly)
-    //world.GenerateMud();
+    world.GenerateMud((surfaceLayer + cavernLayer) / 2, underworldLayer);
     /// Add Silt (Scattered Patches in cavern layer)
-    //world.GenerateSilt();
+    world.GenerateSilt(cavernLayer, underworldLayer);
 
     /* BIOMES PART 1
      * Ice (Two diagonal lines going to almost lava level. Convert stone to ice and dirt/clay/sand/mud to snow and silt to slush)
@@ -73,11 +75,11 @@ World Generate(const WorldSize size)
     
 
     /// Add Metals
-    //world.GenerateMetals();
+    world.GenerateMetals(surfaceTerrain, (surfaceLayer + cavernLayer) / 2, underworldLayer);
     /// Add Gems
-    //world.GenerateGems();
+    world.GenerateGems(surfaceLayer, underworldLayer);
     /// Add Webs
-    //world.GenerateWebs();
+    world.GenerateWebs(surfaceLayer, underworldLayer);
 
     /* BIOMES PART 2
      * Underworld
@@ -89,13 +91,13 @@ World Generate(const WorldSize size)
 
 
     /// Anthill Caves (Mountain Caves)
-    //world.GenerateAnthillCaves();
+    world.GenerateAnthillCaves(anthillCavePos);
     /// Gravitating Sand Fix
-    //world.FixGravitatingSand();
+    world.FixGravitatingSand(surfaceTerrain);
     /// Dirt Walls Fix (Remove dirt walls with no tiles above them)
-    //world.FixDirtWalls();
+    world.FixDirtWalls(surfaceTerrain);
     /// Water on Sand Fix
-    //world.FixWaterOnSand();
+    world.FixWaterOnSand(surfaceTerrain);
 
     /* BIOMES PART 3
      * Pyramids (Chance)
@@ -108,11 +110,11 @@ World Generate(const WorldSize size)
 
 
     /// Smooth World (Hammer blocks to curve the world)
-    //world.SmoothWorld();
+    world.SmoothWorld();
     /// Settle Liquids
-    //world.SettleLiquids();
+    world.SettleLiquids();
     /// Add Waterfalls
-    //world.AddWaterfalls();
+    world.AddWaterfalls();
 
     return world.Finish();
 }

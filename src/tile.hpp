@@ -13,9 +13,12 @@ class Tile
         Air,
         Dirt,
         Grass,
+        Stone,
         Sand,
         Clay,
-        Stone,
+        Mud,
+        Silt,
+        Slush,
         Ash,
     };
     enum class Style

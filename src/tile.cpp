@@ -43,9 +43,12 @@ std::unordered_map<Tile::Type, SDL_Color> t_Colors{
     {Tile::Type::Air, {0, 0, 0, 0}},
     {Tile::Type::Dirt, {151, 107, 75, 255}},
     {Tile::Type::Grass, {40, 182, 80, 255}},
+    {Tile::Type::Stone, {128, 128, 128, 255}},
     {Tile::Type::Sand, {190, 170, 80, 255}},
     {Tile::Type::Clay, {146, 81, 68, 255}},
-    {Tile::Type::Stone, {128, 128, 128, 255}},
+    {Tile::Type::Mud, {255, 100, 100, 255}},
+    {Tile::Type::Silt, {146, 81, 68, 255}},
+    {Tile::Type::Slush, {146, 81, 68, 255}},
     {Tile::Type::Ash, {79, 65, 64, 255}},
 };
 

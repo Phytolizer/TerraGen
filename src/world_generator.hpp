@@ -16,28 +16,52 @@ class WorldGenerator
   private:
     WorldSize m_size;
     std::vector<Tile> m_tiles;
-    std::vector<size_t> m_anthills;
     Random m_random;
 
   public:
     WorldGenerator(WorldSize size, std::uint64_t seed);
     void SetTile(int x, int y, Tile::Type type);
     void SetWall(int x, int y, Tile::Wall wall);
+    void SetLiquid(int x, int y, Tile::Liquid liquid);
     bool IsTile(int x, int y, Tile::Type type);
+    bool IsWall(int x, int y, Tile::Wall wall);
+    bool IsLiquid(int x, int y, Tile::Liquid liquid);
     int RandomHeight(double min, double max);
     std::vector<int> RandomTerrain(int baseHeight, int maxHeight, double amplitude);
 
+    // World Setup
     void GenerateLayers(std::vector<int> surfaceTerrain, std::vector<int> cavernLayer, int underworldLayer);
     void GenerateSurfaceTunnels(std::vector<int> surfaceTerrain);
     void GenerateSand(std::vector<int> surfaceTerrain, int dirtLevel, std::vector<int> rockHeights);
-    void GenerateAnthills(std::vector<int> surfaceTerrain);
+    std::vector<int> GenerateAnthills(std::vector<int> surfaceTerrain);
     void GenerateSurfaceStone(std::vector<int> start, std::vector<int> end);
     void GenerateUndergroundStone(std::vector<int> start, std::vector<int> end);
     void GenerateCavernDirt(std::vector<int> start, int end);
-    void GenerateClay(std::vector<int> start, std::vector<int> mid, std::vector<int> end);
+    // Caves
     void GenerateCaves(std::vector<int> undergroundStart);
     void GenerateEntranceCaves(std::vector<int> surface);
     void GenerateLargeCaves(std::vector<int> cavernStart);
+    // Scattered Blocks
+    void GenerateClay(std::vector<int> start, std::vector<int> mid, std::vector<int> end);
+    void GenerateGrass(std::vector<int> start, int end);
+    void GenerateMud(int start, int end);
+    void GenerateSilt(int start, int end);
+    // Biomes Part 1
+    // Metals, Gems, and Webs
+    void GenerateMetals(std::vector<int> surface, int underground, int underworld);
+    void GenerateGems(int start, int end);
+    void GenerateWebs(int start, int end);
+    // Biomes Part 2
+    // Fixes
+    void GenerateAnthillCaves(std::vector<int> positions);
+    void FixGravitatingSand(std::vector<int> surface);
+    void FixDirtWalls(std::vector<int> surface);
+    void FixWaterOnSand(std::vector<int> surface);
+    // Biomes Part 3
+    // Clean up World
+    void SmoothWorld();
+    void SettleLiquids();
+    void AddWaterfalls();
 
     World Finish();
 };
