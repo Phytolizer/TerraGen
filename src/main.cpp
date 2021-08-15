@@ -1,18 +1,24 @@
 #include "viewport.hpp"
 #include "world_gen.hpp"
-#include <SDL.h>
 #include <fmt/format.h>
 
-int main(int argc, char *argv[])
+extern "C"
+{
+#include <SDL.h>
+}
+
+int main(int /*argc*/, char * /*argv*/[])
 {
     SDL_Init(SDL_INIT_VIDEO);
-    Viewport viewport{0, 0, 1750, 900, 1};
+    constexpr int WORLD_WIDTH = 1750;
+    constexpr int WORLD_HEIGHT = 900;
+    Viewport viewport{0, 0, WORLD_WIDTH, WORLD_HEIGHT, 1};
     World world = WorldGen::Generate(WorldSize::Tiny);
     bool run = true;
     while (run)
     {
         SDL_Event e;
-        while (SDL_PollEvent(&e))
+        while (SDL_PollEvent(&e) != 0)
         {
             switch (e.type)
             {

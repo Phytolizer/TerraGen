@@ -1,3 +1,6 @@
 ---
 BasedOnStyle: Microsoft
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
+SortIncludes: true
+AlignTrailingComments: false
+SpacesBeforeTrailingComments: 4

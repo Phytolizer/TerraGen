@@ -21,6 +21,7 @@ double Random::GetNoise(int x, int y)
     return m_noise.GetNoise<double>(x, y);
 }
 
-std::uint64_t Random::Next(){
+std::uint64_t Random::Next()
+{
     return m_randomModifier++;
 }

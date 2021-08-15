@@ -1,9 +1,9 @@
 #ifndef TERRAGEN_RANDOM_HPP
 #define TERRAGEN_RANDOM_HPP
 
+#include <FastNoiseLite.h>
 #include <cstdint>
 #include <random>
-#include <FastNoiseLite.h>
 
 class Random
 {
@@ -12,11 +12,11 @@ class Random
     std::uint64_t m_randomModifier;
 
   public:
-    Random(std::uint64_t seed);
+    explicit Random(std::uint64_t seed);
     double GetDouble(double min, double max);
     int GetInt(int min, int max);
     double GetNoise(int x, int y);
     std::uint64_t Next();
 };
 
-#endif // TERRAGEN_RANDOM_HPP
+#endif    // TERRAGEN_RANDOM_HPP

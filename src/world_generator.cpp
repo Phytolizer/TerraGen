@@ -1,9 +1,8 @@
 #include "world_generator.hpp"
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <cstdlib>
-#include <math.h>
-#include <stdio.h>
 
 // Constructor
 WorldGenerator::WorldGenerator(WorldSize size, std::uint64_t seed) : m_random{seed}
@@ -11,26 +10,25 @@ WorldGenerator::WorldGenerator(WorldSize size, std::uint64_t seed) : m_random{se
     m_size = size;
     switch (size)
     {
-    case WorldSize::Tiny: //Old Mobile version only -- for testing whole world
-        m_width = 1750; //1743
-        m_height = 900; //893
-        break; //1,575,000 tiles
+    case WorldSize::Tiny:    // Old Mobile version only -- for testing whole world
+        m_width = World::WIDTH_TINY;    // 1743
+        m_height = World::HEIGHT_TINY;    // 893
+        break;    // 1,575,000 tiles
     case WorldSize::Small:
-        m_width = 4200;  //4117
-        m_height = 1200; //1117
-        break; //5,040,000 tiles
+        m_width = World::WIDTH_SMALL;    // 4117
+        m_height = World::HEIGHT_SMALL;    // 1117
+        break;    // 5,040,000 tiles
     case WorldSize::Medium:
-        m_width = 6400;  //6317
-        m_height = 1800; //1717
-        break; //11,520,000 tiles
+        m_width = World::WIDTH_MEDIUM;    // 6317
+        m_height = World::HEIGHT_MEDIUM;    // 1717
+        break;    // 11,520,000 tiles
     case WorldSize::Large:
-        m_width = 8400;  //8317
-        m_height = 2400; //2317
-        break; //20,160,000 tiles
+        m_width = World::WIDTH_LARGE;    // 8317
+        m_height = World::HEIGHT_LARGE;    // 2317
+        break;    // 20,160,000 tiles
     }
     m_tiles.resize(m_width * m_height, Tile());
 }
-
 
 // Tile Functions, Terrain and Random Height Functions
 #pragma region Main Functions
@@ -64,24 +62,28 @@ bool WorldGenerator::IsLiquid(int x, int y, Tile::Liquid liquid)
     return m_tiles[x + m_width * y].m_liquid == liquid;
 }
 
-void WorldGenerator::FillBlob(int i, int j, Tile::Type type, double radius, double variation, bool replaceAir, bool overrideBlocks)
+void WorldGenerator::FillBlob(int x, int y, Tile::Type type, double radius, double variation, bool replaceAir,
+                              bool overrideBlocks)
 {
-    int r = (int) (radius / 2);
-    for (int x = i - r; x < i + r; ++x)
+    int r = static_cast<int>(radius / 2);
+    for (int i = x - r; i < x + r; ++i)
     {
-        for (int y = j - r; y < j + r; ++y)
+        for (int j = y - r; j < y + r; ++j)
         {
-            double distance = std::sqrt((double) pow(x - i, 2) + pow(y - j, 2));
+            double distance = std::sqrt(std::pow(i - x, 2) + std::pow(j - y, 2));
             distance *= 2 / radius;
             double rand = m_random.GetDouble(0, variation);
-            
+
             // Distance is the distance from 0 (center) to 1 (max radius)
             // Rand is a random value based on variation
             double check = distance + rand;
-            bool isAir = IsTile(x, y, Tile::Type::Air);
+            bool isAir = IsTile(i, j, Tile::Type::Air);
             if (replaceAir && isAir || overrideBlocks && !isAir)
             {
-                if (check < 1) SetTile(x, y, type);
+                if (check < 1)
+                {
+                    SetTile(i, j, type);
+                }
             }
         }
     }
@@ -90,57 +92,83 @@ void WorldGenerator::FillBlob(int i, int j, Tile::Type type, double radius, doub
 // Helper Functions
 int WorldGenerator::RandomHeight(double min, double max)
 {
-    return m_height * m_random.GetDouble(min, max);
+    return static_cast<int>(static_cast<double>(m_height) * m_random.GetDouble(min, max));
 }
 
 std::vector<int> WorldGenerator::RandomTerrain(int minHeight, int maxHeight, double amplitude)
 {
     std::vector<int> terrainHeight(m_width);
 
-    const int bounds = (int) ((minHeight - maxHeight) / 3);
-    const int r = m_random.Next();
+    const int bounds = (minHeight - maxHeight) / 3;
+    const std::uint64_t r = m_random.Next();
 
     double height = m_random.GetInt(minHeight + bounds, maxHeight - bounds);
     double velocity = 0;
     double goal = height;
     int trend = 0;
     int goalTimer = 0;
-    
+
     for (int x = 0; x < m_width; ++x)
     {
-        if (--goalTimer <= 0) 
+        if (--goalTimer <= 0)
         {
             // move goal to new location within min-max bounds
-            goalTimer = m_random.GetInt(40, 120);
+            constexpr int GOAL_TIMER_MIN = 40;
+            constexpr int GOAL_TIMER_MAX = 120;
+            goalTimer = m_random.GetInt(GOAL_TIMER_MIN, GOAL_TIMER_MAX);
             double change = m_random.GetDouble(-amplitude * (2 + trend), amplitude * (2 - trend));
-            if (goal + change < minHeight) change += 15;
-            if (goal + change > maxHeight) change -= 15;
+            constexpr int HEIGHT_CORRECTION_DELTA = 15;
+            if (goal + change < minHeight)
+            {
+                change += HEIGHT_CORRECTION_DELTA;
+            }
+            if (goal + change > maxHeight)
+            {
+                change -= HEIGHT_CORRECTION_DELTA;
+            }
             goal += change;
             // keep track of whether ground moves up or down in a row. Used to modify chances
             trend += goal > height ? 1 : -1;
         }
         // Velocity moves towards the goal, only if velocity is small enough
-        velocity = std::lerp(velocity, goal - height - velocity * 10, 0.01);
+        constexpr int VELOCITY_LERP_MULTIPLIER = 10;
+        constexpr double LERP_TIME = 0.01;
+        velocity = std::lerp(velocity, goal - height - velocity * VELOCITY_LERP_MULTIPLIER, LERP_TIME);
         height += velocity;
 
         // Small noise to add to the height walk
-        const double noise = m_random.GetNoise(x, r) * amplitude;
+        const double noise = m_random.GetNoise(x, static_cast<int>(r)) * amplitude;
 
-        if (height < minHeight) height = minHeight;
-        if (height > maxHeight) height = maxHeight;
-        terrainHeight[x] = (int) (height + noise);
+        if (height < minHeight)
+        {
+            height = minHeight;
+        }
+        if (height > maxHeight)
+        {
+            height = maxHeight;
+        }
+        terrainHeight[x] = static_cast<int>(height + noise);
     }
 
     return terrainHeight;
 }
 #pragma endregion Main Functions
 
+std::size_t WorldGenerator::GetWidth() const
+{
+    return m_width;
+}
+
+std::size_t WorldGenerator::GetHeight() const
+{
+    return m_height;
+}
 
 // World Setup
 #pragma region WorldSetup
 void WorldGenerator::GenerateDepthLevels(int surface, int cavern, int underworld)
 {
-    const int space = surface * 0.35;
+    const int space = static_cast<int>(surface * 0.35);
     for (int x = 0; x < m_width; ++x)
     {
         for (int y = 0; y < space; ++y)
@@ -193,18 +221,25 @@ void WorldGenerator::GenerateLayers(std::vector<int> dirtTerrain, std::vector<in
     }
 }
 
-void WorldGenerator::GenerateSurfaceTunnels(std::vector<int> surfaceTerrain)
+void WorldGenerator::GenerateSurfaceTunnels(const std::vector<int> &surfaceTerrain)
 {
     const int tunnelCount = m_random.GetInt(6, 10);
-    const int r1 = m_random.Next();
-    const int r2 = m_random.Next();
-    for (int i = 0; i < tunnelCount; ++i) {
-        int start;
-        // Left side of world
-        if (i % 2 == 0) start = m_random.GetInt(50, m_width / 2 - 100);
-        // Right side of world
-        else start = m_random.GetInt(m_width / 2 + 50, m_width - 100);
-        
+    const std::uint64_t r1 = m_random.Next();
+    const std::uint64_t r2 = m_random.Next();
+    for (int i = 0; i < tunnelCount; ++i)
+    {
+        int start = 0;
+        if (i % 2 == 0)
+        {
+            // Left side of world
+            start = m_random.GetInt(50, m_width / 2 - 100);
+        }
+        else
+        {
+            // Right side of world
+            start = m_random.GetInt(m_width / 2 + 50, m_width - 100);
+        }
+
         int size = m_random.GetInt(30, 50);
 
         const int spacing = 6;
@@ -213,7 +248,8 @@ void WorldGenerator::GenerateSurfaceTunnels(std::vector<int> surfaceTerrain)
             int above = (m_random.GetNoise(x, r1) - 1.25) * 1.5 - 1;
             int below = (m_random.GetNoise(x, r2) + 1.25) * 1.5 + 1;
 
-            if (x == start || x == start + size - 1) {
+            if (x == start || x == start + size - 1)
+            {
                 above++;
                 below--;
             }
@@ -244,12 +280,15 @@ constexpr double sandPileCutoff = 0.85;
 void WorldGenerator::GenerateSand(std::vector<int> top, int mid, std::vector<int> end)
 {
     const int desertCount = m_random.GetInt(6, 10);
-    for (int i = 0; i < desertCount; ++i) {
+    for (int i = 0; i < desertCount; ++i)
+    {
         int start;
         // Left side of world
-        if (i % 2 == 0) start = m_random.GetInt(50, m_width / 2 - 100);
+        if (i % 2 == 0)
+            start = m_random.GetInt(50, m_width / 2 - 100);
         // Right side of world
-        else start = m_random.GetInt(m_width / 2 + 50, m_width - 100);
+        else
+            start = m_random.GetInt(m_width / 2 + 50, m_width - 100);
 
         int size = m_random.GetInt(30, 70);
 
@@ -257,14 +296,18 @@ void WorldGenerator::GenerateSand(std::vector<int> top, int mid, std::vector<int
         for (int x = start; x < start + size; ++x)
         {
             // Left side of desert, go deeper
-            if (x < start + 10) depth += m_random.GetInt(0, 2);
+            if (x < start + 10)
+                depth += m_random.GetInt(0, 2);
             // Right side of desert, go shallower
-            else if (x > start + size - 10) depth += m_random.GetInt(-2, 0);
+            else if (x > start + size - 10)
+                depth += m_random.GetInt(-2, 0);
             // Middle of desert, random walk
-            else depth += m_random.GetInt(-1, 1);
-            
+            else
+                depth += m_random.GetInt(-1, 1);
+
             // Dont go too shallow
-            if (depth < top[x] + 5) depth += 2;
+            if (depth < top[x] + 5)
+                depth += 2;
 
             for (int y = top[x]; y < depth; ++y)
             {
@@ -279,10 +322,13 @@ void WorldGenerator::GenerateSand(std::vector<int> top, int mid, std::vector<int
         for (int y = mid; y < bottom; ++y)
         {
             double noise = m_random.GetNoise(x * sandPileScale, y * sandPileScale);
-            if (y - mid <= 5){
+            if (y - mid <= 5)
+            {
                 double proximity = 5 - (y - mid);
                 noise -= proximity / 30;
-            } else if (bottom - y <= 5){
+            }
+            else if (bottom - y <= 5)
+            {
                 double proximity = 6 - (bottom - y);
                 noise -= proximity / 30;
             }
@@ -312,18 +358,22 @@ std::vector<int> WorldGenerator::GenerateAnthills(std::vector<int> surfaceTerrai
 
     std::vector<int> anthillCavePositions(anthillCount * 2);
 
-    for (int i = 0; i < anthillCount; ++i) {
+    for (int i = 0; i < anthillCount; ++i)
+    {
         int start;
         int size;
-        do {
+        do
+        {
             // Left side of world
-            if (i % 2 == 0) start = m_random.GetInt(50, m_width / 2 - 100);
+            if (i % 2 == 0)
+                start = m_random.GetInt(50, m_width / 2 - 100);
             // Right side of world
-            else start = m_random.GetInt(m_width / 2 + 50, m_width - 100);
+            else
+                start = m_random.GetInt(m_width / 2 + 50, m_width - 100);
             // Size of anthill
             size = m_random.GetInt(40, 60);
-        } while (IsTile(start, surfaceTerrain[start], Tile::Type::Sand) || IsTile(start + size, surfaceTerrain[start + size], Tile::Type::Sand));
-        
+        } while (IsTile(start, surfaceTerrain[start], Tile::Type::Sand) ||
+                 IsTile(start + size, surfaceTerrain[start + size], Tile::Type::Sand));
 
         for (int x = start; x < start + size; ++x)
         {
@@ -332,10 +382,11 @@ std::vector<int> WorldGenerator::GenerateAnthills(std::vector<int> surfaceTerrai
             dist *= dist;
             dist /= (max / 2);
             dist = std::min(max, dist);
-            
+
             const int base = surfaceTerrain[x];
             const int high = surfaceTerrain[x] - (max - dist);
-            if (high > base) break;
+            if (high > base)
+                break;
             for (int y = high; y <= base; ++y)
             {
                 if (y == high)
@@ -369,11 +420,12 @@ void WorldGenerator::GenerateSurfaceStone(std::vector<int> start, std::vector<in
             if (noise > surfaceStoneCutoff)
             {
                 int pos = x + m_width * y;
-                switch (m_tiles[pos].m_type) {
-                    case Tile::Type::Dirt:
-                        SetTile(x, y, Tile::Type::Stone);
-                    default:
-                        break;
+                switch (m_tiles[pos].m_type)
+                {
+                case Tile::Type::Dirt:
+                    SetTile(x, y, Tile::Type::Stone);
+                default:
+                    break;
                 };
             }
         }
@@ -389,8 +441,10 @@ void WorldGenerator::GenerateUndergroundStone(std::vector<int> start, std::vecto
         for (int y = start[x]; y < end[x]; ++y)
         {
             const double noise_scale_1 = m_random.GetNoise(x * undergroundStoneScale, y * undergroundStoneScale);
-            const double noise_scale_2 = m_random.GetNoise(x * undergroundStoneScale / 2, y * undergroundStoneScale / 2) / 2;
-            const double noise_scale_4 = m_random.GetNoise(x * undergroundStoneScale / 4, y * undergroundStoneScale / 4) / 4;
+            const double noise_scale_2 =
+                m_random.GetNoise(x * undergroundStoneScale / 2, y * undergroundStoneScale / 2) / 2;
+            const double noise_scale_4 =
+                m_random.GetNoise(x * undergroundStoneScale / 4, y * undergroundStoneScale / 4) / 4;
 
             const double noise = noise_scale_1 + noise_scale_2 + noise_scale_4;
             if (noise > undergroundStoneCutoff)
@@ -413,9 +467,9 @@ void WorldGenerator::GenerateCavernDirt(std::vector<int> start, int end)
             const double noise_scale_1 = m_random.GetNoise(x * cavernDirtScale, y * cavernDirtScale);
             const double noise_scale_2 = m_random.GetNoise(x * cavernDirtScale / 2, y * cavernDirtScale / 2) / 2;
             const double noise_scale_4 = m_random.GetNoise(x * cavernDirtScale / 4, y * cavernDirtScale / 4) / 4;
-            
+
             const double noise = noise_scale_1 + noise_scale_2 + noise_scale_4;
-            
+
             const double cutoff_noise = m_random.GetNoise(x * 2, y * 2) / 4;
             if (noise > cavernDirtCutoff + cutoff_noise)
             {
@@ -425,7 +479,6 @@ void WorldGenerator::GenerateCavernDirt(std::vector<int> start, int end)
     }
 }
 #pragma endregion
-
 
 // Caves
 #pragma region Caves
@@ -452,7 +505,6 @@ void WorldGenerator::GenerateCaves(std::vector<int> undergroundStart)
 
 void WorldGenerator::GenerateEntranceCaves(std::vector<int> surface)
 {
-
 }
 
 constexpr double largeCaveScale = 4;
@@ -477,7 +529,6 @@ void WorldGenerator::GenerateLargeCaves(std::vector<int> cavernStart)
 }
 #pragma endregion Caves
 
-
 // Scattered Blocks (Clay, Grass, Mud, Silt)
 #pragma region Scattered Blocks
 constexpr double clayScale = 7;
@@ -495,13 +546,14 @@ void WorldGenerator::GenerateClay(std::vector<int> start, std::vector<int> mid, 
                 continue;
             }
             int pos = x + m_width * y;
-                switch (m_tiles[pos].m_type) {
-                    case Tile::Type::Dirt:
-                    case Tile::Type::Stone:
-                        SetTile(x, y, Tile::Type::Clay);
-                    default:
-                        break;
-                };
+            switch (m_tiles[pos].m_type)
+            {
+            case Tile::Type::Dirt:
+            case Tile::Type::Stone:
+                SetTile(x, y, Tile::Type::Clay);
+            default:
+                break;
+            };
         }
         for (int y = mid[x] + 10; y < end[x] + 30; ++y)
         {
@@ -567,11 +619,9 @@ void WorldGenerator::GenerateSilt(int start, int end)
 }
 #pragma endregion Scattered Blocks
 
-
 // Biomes Part 1
 #pragma region Biomes Part 1
 #pragma endregion Biomes Part 1
-
 
 // Metals, Gems, and Webs
 #pragma region Shinies
@@ -579,58 +629,58 @@ void WorldGenerator::GenerateMetals(std::vector<int> surface, int underground, i
 {
     int cavernRadius = (underground + cavern) / 2 - underground;
     // COPPER
-    for (int i = 0; i < (int)((double) m_tiles.size() * 6E-05); ++i)
+    for (int i = 0; i < (int)((double)m_tiles.size() * 6E-05); ++i)
     {
         const int x = m_random.GetInt(0, m_width);
         const int y = m_random.GetInt(surface[x], underground);
         FillBlob(x, y, Tile::Type::Copper, m_random.GetDouble(3, 6), m_random.GetDouble(0.1, 0.4));
     }
-    for (int i = 0; i < (int)((double) m_tiles.size() * 8E-05); ++i)
+    for (int i = 0; i < (int)((double)m_tiles.size() * 8E-05); ++i)
     {
         const int x = m_random.GetInt(0, m_width);
         const int y = m_random.GetInt(underground, cavern + cavernRadius);
         FillBlob(x, y, Tile::Type::Copper, m_random.GetDouble(3, 7), m_random.GetDouble(0.1, 0.4));
     }
-    for (int i = 0; i < (int)((double) m_tiles.size() * 0.0002); ++i)
+    for (int i = 0; i < (int)((double)m_tiles.size() * 0.0002); ++i)
     {
         const int x = m_random.GetInt(0, m_width);
         const int y = m_random.GetInt(cavern - cavernRadius, underworld);
         FillBlob(x, y, Tile::Type::Copper, m_random.GetDouble(4, 9), m_random.GetDouble(0.1, 0.4));
     }
     // IRON
-    for (int i = 0; i < (int)((double) m_tiles.size() * 8E-05); ++i)
+    for (int i = 0; i < (int)((double)m_tiles.size() * 8E-05); ++i)
     {
         const int x = m_random.GetInt(0, m_width);
         const int y = m_random.GetInt(surface[x], underground);
         FillBlob(x, y, Tile::Type::Iron, m_random.GetDouble(3, 7), m_random.GetDouble(0.1, 0.4));
     }
-    for (int i = 0; i < (int)((double) m_tiles.size() * 0.0002); ++i)
+    for (int i = 0; i < (int)((double)m_tiles.size() * 0.0002); ++i)
     {
         const int x = m_random.GetInt(0, m_width);
         const int y = m_random.GetInt(underground, cavern + cavernRadius);
         FillBlob(x, y, Tile::Type::Iron, m_random.GetDouble(3, 6), m_random.GetDouble(0.1, 0.4));
     }
-    for (int i = 0; i < (int)((double) m_tiles.size() * 2.6E-05); ++i)
+    for (int i = 0; i < (int)((double)m_tiles.size() * 2.6E-05); ++i)
     {
         const int x = m_random.GetInt(0, m_width);
         const int y = m_random.GetInt(cavern - cavernRadius, underworld);
         FillBlob(x, y, Tile::Type::Iron, m_random.GetDouble(4, 9), m_random.GetDouble(0.1, 0.4));
     }
     // SILVER
-    for (int i = 0; i < (int)((double) m_tiles.size() * 2.6E-05); ++i)
+    for (int i = 0; i < (int)((double)m_tiles.size() * 2.6E-05); ++i)
     {
         const int x = m_random.GetInt(0, m_width);
         const int y = m_random.GetInt(underground, cavern + cavernRadius);
         FillBlob(x, y, Tile::Type::Silver, m_random.GetDouble(3, 6), m_random.GetDouble(0.1, 0.4));
     }
-    for (int i = 0; i < (int)((double) m_tiles.size() * 0.00015); ++i)
+    for (int i = 0; i < (int)((double)m_tiles.size() * 0.00015); ++i)
     {
         const int x = m_random.GetInt(0, m_width);
         const int y = m_random.GetInt(cavern - cavernRadius, underworld);
         FillBlob(x, y, Tile::Type::Silver, m_random.GetDouble(4, 9), m_random.GetDouble(0.1, 0.4));
     }
     // GOLD
-    for (int i = 0; i < (int)((double) m_tiles.size() * 0.00012); ++i)
+    for (int i = 0; i < (int)((double)m_tiles.size() * 0.00012); ++i)
     {
         const int x = m_random.GetInt(0, m_width);
         const int y = m_random.GetInt(cavern - cavernRadius, underworld);
@@ -640,26 +690,21 @@ void WorldGenerator::GenerateMetals(std::vector<int> surface, int underground, i
 
 void WorldGenerator::GenerateGems(int start, int end)
 {
-
 }
 
 void WorldGenerator::GenerateWebs(int start, int end)
 {
-
 }
 #pragma endregion Shinies
-
 
 // Biomes Part 2
 #pragma region Biomes Part 2
 #pragma endregion Biomes Part 2
 
-
 // Fixes
 #pragma region Fixes
 void WorldGenerator::GenerateAnthillCaves(std::vector<int> positions)
 {
-
 }
 
 constexpr int correctionRadius = 16;
@@ -692,7 +737,8 @@ void WorldGenerator::FixDirtWalls(std::vector<int> surface)
             }
             else if (!IsWall(x, y, Tile::Wall::Air))
             {
-                do {
+                do
+                {
                     SetWall(x, y, Tile::Wall::Air);
                     y++;
                 } while (!IsWall(x, y, Tile::Wall::Air) && IsTile(x, y, Tile::Type::Air));
@@ -722,30 +768,24 @@ void WorldGenerator::FixWaterOnSand(std::vector<int> surface)
 }
 #pragma endregion Fixes
 
-
 // Biomes Part 3
 #pragma region Biomes Part 3
 #pragma endregion Biomes Part 3
-
 
 // Clean Up World
 #pragma region Clean Up
 void WorldGenerator::SmoothWorld()
 {
-
 }
 
 void WorldGenerator::SettleLiquids()
 {
-
 }
 
 void WorldGenerator::AddWaterfalls()
 {
-
 }
 #pragma endregion Clean Up
-
 
 // Finalize World
 World WorldGenerator::Finish()

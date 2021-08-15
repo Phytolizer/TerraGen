@@ -27,27 +27,24 @@ void Tile::SetDepth(Depth depth)
     m_depth = depth;
 }
 
-SDL_Color Tile::GetColor()
+SDL_Color Tile::GetColor() const
 {
     if (m_type != Type::Air)
     {
-        return TileTypeColors[m_type];
+        return TILE_TYPE_COLORS.at(m_type);
     }
-    else if (m_liquid != Liquid::None)
+    if (m_liquid != Liquid::None)
     {
-        return LiquidColors[m_liquid];
+        return LIQUID_COLORS.at(m_liquid);
     }
-    else if (m_wall != Wall::Air)
+    if (m_wall != Wall::Air)
     {
-        return WallColors[m_wall];
+        return WALL_COLORS.at(m_wall);
     }
-    else
-    {
-        return DepthColors[m_depth];
-    }
+    return DEPTH_COLORS.at(m_depth);
 }
 
-std::unordered_map<Tile::Type, SDL_Color> TileTypeColors{
+const std::unordered_map<Tile::Type, SDL_Color> TILE_TYPE_COLORS{
     {Tile::Type::Air, {0, 0, 0, 0}},
     {Tile::Type::Dirt, {151, 107, 75, 255}},
     {Tile::Type::Grass, {40, 182, 80, 255}},
@@ -65,20 +62,20 @@ std::unordered_map<Tile::Type, SDL_Color> TileTypeColors{
     {Tile::Type::Web, {250, 250, 250, 255}},
 };
 
-std::unordered_map<Tile::Liquid, SDL_Color> LiquidColors{
+const std::unordered_map<Tile::Liquid, SDL_Color> LIQUID_COLORS{
     {Tile::Liquid::None, {0, 0, 0, 0}},
     {Tile::Liquid::Water, {9, 61, 255, 255}},
     {Tile::Liquid::Lava, {253, 32, 3, 255}},
     {Tile::Liquid::Honey, {253, 32, 3, 255}},
 };
 
-std::unordered_map<Tile::Wall, SDL_Color> WallColors{
+const std::unordered_map<Tile::Wall, SDL_Color> WALL_COLORS{
     {Tile::Wall::Air, {0, 0, 0, 0}},
     {Tile::Wall::Dirt, {111, 67, 35, 255}},
     {Tile::Wall::Grass, {0, 142, 40, 255}},
 };
 
-std::unordered_map<Tile::Depth, SDL_Color> DepthColors{
+const std::unordered_map<Tile::Depth, SDL_Color> DEPTH_COLORS{
     {Tile::Depth::Space, {65, 64, 255, 255}},      {Tile::Depth::Overworld, {123, 152, 254, 255}},
     {Tile::Depth::Underground, {88, 61, 46, 255}}, {Tile::Depth::Cavern, {74, 67, 60, 255}},
     {Tile::Depth::Underworld, {50, 44, 38, 255}},

@@ -26,4 +26,4 @@ struct Viewport
     void Move(int ddx, int ddy);
 };
 
-#endif // TERRAGEN_VIEWPORT_HPP
+#endif    // TERRAGEN_VIEWPORT_HPP

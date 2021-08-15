@@ -67,12 +67,12 @@ struct Tile
     void SetLiquid(Liquid liquid);
     void SetWall(Wall wall);
     void SetDepth(Depth depth);
-    SDL_Color GetColor();
+    [[nodiscard]] SDL_Color GetColor() const;
 };
 
-extern std::unordered_map<Tile::Type, SDL_Color> TileTypeColors;
-extern std::unordered_map<Tile::Liquid, SDL_Color> LiquidColors;
-extern std::unordered_map<Tile::Wall, SDL_Color> WallColors;
-extern std::unordered_map<Tile::Depth, SDL_Color> DepthColors;
+extern const std::unordered_map<Tile::Type, SDL_Color> TILE_TYPE_COLORS;
+extern const std::unordered_map<Tile::Liquid, SDL_Color> LIQUID_COLORS;
+extern const std::unordered_map<Tile::Wall, SDL_Color> WALL_COLORS;
+extern const std::unordered_map<Tile::Depth, SDL_Color> DEPTH_COLORS;
 
-#endif // TILE_HPP_
+#endif    // TILE_HPP_

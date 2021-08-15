@@ -7,6 +7,6 @@
 namespace WorldGen
 {
 World Generate(WorldSize size);
-}
+}    // namespace WorldGen
 
-#endif // TERRAGEN_WORLD_GEN_HPP
+#endif    // TERRAGEN_WORLD_GEN_HPP

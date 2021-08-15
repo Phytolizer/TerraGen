@@ -9,4 +9,4 @@ enum class WorldSize
     Large,
 };
 
-#endif // TERRAGEN_WORLD_SIZE_HPP
+#endif    // TERRAGEN_WORLD_SIZE_HPP

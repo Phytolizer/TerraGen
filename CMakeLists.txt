@@ -9,7 +9,8 @@ if(GIT_FOUND)
     execute_process(
       COMMAND "${GIT_EXECUTABLE}" submodule update --init --recursive
       WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-      RESULT_VARIABLE GIT_SUBMOD_RESULT)
+      RESULT_VARIABLE GIT_SUBMOD_RESULT
+    )
     if(NOT GIT_SUBMOD_RESULT EQUAL "0")
       message(
         FATAL_ERROR
@@ -19,10 +20,26 @@ if(GIT_FOUND)
   endif()
 endif()
 
+include(cmake/CPM.cmake)
+
+cpmaddpackage(
+  NAME
+  Format.cmake
+  VERSION
+  1.7.0
+  GITHUB_REPOSITORY
+  TheLartians/Format.cmake
+  OPTIONS # set to yes skip cmake formatting
+  "FORMAT_SKIP_CMAKE NO"
+  # path to exclude (optional, supports regular expressions)
+  "CMAKE_FORMAT_EXCLUDE cmake/CPM.cmake"
+)
+
 project(
   TerraGen
   VERSION 0.1.0
-  LANGUAGES CXX)
+  LANGUAGES CXX
+)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 

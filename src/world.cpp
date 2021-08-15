@@ -1,19 +1,20 @@
 #include "world.hpp"
 
-World::World(std::vector<Tile> &&tiles, std::size_t width, std::size_t height) : tiles{std::move(tiles)}, width{width}, height{height}
+World::World(std::vector<Tile> &&tiles, std::size_t width, std::size_t height)
+    : tiles{std::move(tiles)}, width{width}, height{height}
 {
     switch (width)
     {
-    case 1750:
+    case WIDTH_TINY:
         size = WorldSize::Tiny;
         break;
-    case 4200:
+    case WIDTH_SMALL:
         size = WorldSize::Small;
         break;
-    case 6400:
+    case WIDTH_MEDIUM:
         size = WorldSize::Medium;
         break;
-    case 8400:
+    case WIDTH_LARGE:
         size = WorldSize::Large;
         break;
     default:

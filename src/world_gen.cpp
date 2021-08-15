@@ -1,7 +1,7 @@
 #include "world_gen.hpp"
+#include "random.hpp"
 #include "world_generator.hpp"
 #include <FastNoiseLite.h>
-#include "random.hpp"
 
 namespace WorldGen
 {
@@ -23,7 +23,7 @@ World Generate(const WorldSize size)
      */
     const int surfaceLayer = world.RandomHeight(0.25, 0.26);
     const int cavernLayer = world.RandomHeight(0.36, 0.38);
-    const int underworldLayer = world.m_height - 200;
+    const int underworldLayer = world.GetHeight() - 200;
 
     auto surfaceTerrain = world.RandomTerrain(surfaceLayer - 125, surfaceLayer - 5, 5);
     auto dirtHeights = world.RandomTerrain(surfaceLayer, surfaceLayer + 10, 2);
@@ -42,7 +42,7 @@ World Generate(const WorldSize size)
     world.GenerateUndergroundStone(dirtHeights, rockHeights);
     /// Mix Dirt into Stone
     world.GenerateCavernDirt(rockHeights, underworldLayer);
-    
+
     /* CAVES
      * Small Holes (Scattered throughout, small, water and lava filled ones too)
      * Dirt Layer Caves (Tall winding narrow caves, some filled with watter)
@@ -63,17 +63,17 @@ World Generate(const WorldSize size)
     world.GenerateSilt(cavernLayer, underworldLayer);
 
     /* BIOMES PART 1
-     * Ice (Two diagonal lines going to almost lava level. Convert stone to ice and dirt/clay/sand/mud to snow and silt to slush)
-     * Jungle (Feathered uneven edges to underworld. Convert everthing to mud. Keep stone near surface with falloff. Remove lava.
-     *         Generate New Stone below cavern. Jungle walls from underground to lava level. Any mud touching air becomes jungle grass)
-     * Marble (Horizontal walk)
-     * Granite (Scattered spheres?)
-     * Full Desert (Choose location, create large sphere of sand partially underground. Clear any dirt/grass above. Generate sandstone / caves)
-     * Sky Islands (Stretched semi circle of clouds. Highest point - 1 gets filled with dirt/grass. Generate Building. Add a few small cloud patches above)
-     * 1.3 Glowing Mushroom Biomes (Horizontal walk underground. Clear a large area under walk. Convert stone to mud and add mushroom grass)
-     * 1.4 Glowing Mushroom Biomes (Generate large blob of mud with minor falloff -- Keep caves from top and near falloff. Carve out round holes inside with flat bottoms.)
+     * Ice (Two diagonal lines going to almost lava level. Convert stone to ice and dirt/clay/sand/mud to snow and silt
+     * to slush) Jungle (Feathered uneven edges to underworld. Convert everthing to mud. Keep stone near surface with
+     * falloff. Remove lava. Generate New Stone below cavern. Jungle walls from underground to lava level. Any mud
+     * touching air becomes jungle grass) Marble (Horizontal walk) Granite (Scattered spheres?) Full Desert (Choose
+     * location, create large sphere of sand partially underground. Clear any dirt/grass above. Generate sandstone /
+     * caves) Sky Islands (Stretched semi circle of clouds. Highest point - 1 gets filled with dirt/grass. Generate
+     * Building. Add a few small cloud patches above) 1.3 Glowing Mushroom Biomes (Horizontal walk underground. Clear a
+     * large area under walk. Convert stone to mud and add mushroom grass) 1.4 Glowing Mushroom Biomes (Generate large
+     * blob of mud with minor falloff -- Keep caves from top and near falloff. Carve out round holes inside with flat
+     * bottoms.)
      */
-    
 
     /// Add Metals
     world.GenerateMetals(surfaceTerrain, surfaceLayer, cavernLayer, underworldLayer);
@@ -89,7 +89,6 @@ World Generate(const WorldSize size)
      * Corruption/Crimson (mutually exclusive)
      * Ocean
      */
-
 
     /// Anthill Caves (Mountain Caves)
     world.GenerateAnthillCaves(anthillCavePos);
@@ -109,7 +108,6 @@ World Generate(const WorldSize size)
      * Bee Hives
      */
 
-
     /// Smooth World (Hammer blocks to curve the world)
     world.SmoothWorld();
     /// Settle Liquids
@@ -119,4 +117,4 @@ World Generate(const WorldSize size)
 
     return world.Finish();
 }
-} // namespace WorldGen
+}    // namespace WorldGen
