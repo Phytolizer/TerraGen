@@ -28,7 +28,7 @@ jobs:
         run: |
           if [[ "${{ runner.os }}" == 'windows-latest' ]]; then
             declare -x WINDOWS=true
-          elif [[ "${{ runner.os }}" == 'ubuntu-latest' ]]
+          elif [[ "${{ runner.os }}" == 'ubuntu-latest' ]]; then
             sudo apt-get install -y python3-pip clang-format
             python3 -m pip install cmakelang
           fi
