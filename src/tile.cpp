@@ -9,8 +9,7 @@ Tile::Tile()
     m_depth = Depth::Overworld;
 }
 
-
-void Tile::SetTile(Type type)
+void Tile::SetType(Type type)
 {
     m_type = type;
 }
@@ -32,23 +31,23 @@ SDL_Color Tile::GetColor()
 {
     if (m_type != Type::Air)
     {
-        return t_Colors[m_type];
+        return TileTypeColors[m_type];
     }
     else if (m_liquid != Liquid::None)
     {
-        return l_Colors[m_liquid];
+        return LiquidColors[m_liquid];
     }
     else if (m_wall != Wall::Air)
     {
-        return w_Colors[m_wall];
+        return WallColors[m_wall];
     }
     else
     {
-        return d_Colors[m_depth];
+        return DepthColors[m_depth];
     }
 }
 
-std::unordered_map<Tile::Type, SDL_Color> t_Colors{
+std::unordered_map<Tile::Type, SDL_Color> TileTypeColors{
     {Tile::Type::Air, {0, 0, 0, 0}},
     {Tile::Type::Dirt, {151, 107, 75, 255}},
     {Tile::Type::Grass, {40, 182, 80, 255}},
@@ -66,23 +65,21 @@ std::unordered_map<Tile::Type, SDL_Color> t_Colors{
     {Tile::Type::Web, {250, 250, 250, 255}},
 };
 
-std::unordered_map<Tile::Liquid, SDL_Color> l_Colors{
+std::unordered_map<Tile::Liquid, SDL_Color> LiquidColors{
     {Tile::Liquid::None, {0, 0, 0, 0}},
     {Tile::Liquid::Water, {9, 61, 255, 255}},
     {Tile::Liquid::Lava, {253, 32, 3, 255}},
     {Tile::Liquid::Honey, {253, 32, 3, 255}},
 };
 
-std::unordered_map<Tile::Wall, SDL_Color> w_Colors{
+std::unordered_map<Tile::Wall, SDL_Color> WallColors{
     {Tile::Wall::Air, {0, 0, 0, 0}},
     {Tile::Wall::Dirt, {111, 67, 35, 255}},
     {Tile::Wall::Grass, {0, 142, 40, 255}},
 };
 
-std::unordered_map<Tile::Depth, SDL_Color> d_Colors{
-    {Tile::Depth::Space, {65,64,255, 255}},
-    {Tile::Depth::Overworld, {123, 152, 254, 255}},
-    {Tile::Depth::Underground, {88,61,46, 255}},
-    {Tile::Depth::Cavern, {74,67,60, 255}},
-    {Tile::Depth::Underworld, {50,44,38, 255}},
+std::unordered_map<Tile::Depth, SDL_Color> DepthColors{
+    {Tile::Depth::Space, {65, 64, 255, 255}},      {Tile::Depth::Overworld, {123, 152, 254, 255}},
+    {Tile::Depth::Underground, {88, 61, 46, 255}}, {Tile::Depth::Cavern, {74, 67, 60, 255}},
+    {Tile::Depth::Underworld, {50, 44, 38, 255}},
 };

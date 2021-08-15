@@ -5,9 +5,8 @@
 #include <cstdint>
 #include <unordered_map>
 
-class Tile
+struct Tile
 {
-    public:
     enum class Type
     {
         Air,
@@ -57,25 +56,23 @@ class Tile
         Underworld,
     };
 
-  public:
     Type m_type;
     Liquid m_liquid;
     double m_liquidLevel;
     Wall m_wall;
     Depth m_depth;
-    
-  public:
+
     Tile();
-    void SetTile(Type type);
+    void SetType(Type type);
     void SetLiquid(Liquid liquid);
     void SetWall(Wall wall);
     void SetDepth(Depth depth);
     SDL_Color GetColor();
 };
 
-extern std::unordered_map<Tile::Type, SDL_Color> t_Colors;
-extern std::unordered_map<Tile::Liquid, SDL_Color> l_Colors;
-extern std::unordered_map<Tile::Wall, SDL_Color> w_Colors;
-extern std::unordered_map<Tile::Depth, SDL_Color> d_Colors;
+extern std::unordered_map<Tile::Type, SDL_Color> TileTypeColors;
+extern std::unordered_map<Tile::Liquid, SDL_Color> LiquidColors;
+extern std::unordered_map<Tile::Wall, SDL_Color> WallColors;
+extern std::unordered_map<Tile::Depth, SDL_Color> DepthColors;
 
 #endif // TILE_HPP_

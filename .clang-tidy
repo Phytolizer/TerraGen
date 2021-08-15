@@ -1,5 +1,7 @@
 ---
 Checks: '*,-fuchsia-*,-llvmlibc-*'
 CheckOptions:
-	- key: readability-identifier-naming.NamespaceCase
-	  value: CamelCase
+  - key: readability-identifier-naming.NamespaceCase
+    value: CamelCase
+  - key: readability-identifier-naming.PrivateMemberPrefix
+    value: m_
