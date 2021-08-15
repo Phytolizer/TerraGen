@@ -25,10 +25,11 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install dependencies
+        shell: bash
         run: |
-          if [[ "${{ runner.os }}" == 'windows-latest' ]]; then
+          if [[ "${{ runner.os }}" == 'Windows' ]]; then
             declare -x WINDOWS=true
-          elif [[ "${{ runner.os }}" == 'ubuntu-latest' ]]; then
+          elif [[ "${{ runner.os }}" == 'Linux' ]]; then
             sudo apt-get install -y python3-pip clang-format
             python3 -m pip install cmakelang
           fi
