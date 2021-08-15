@@ -2,13 +2,13 @@ name: CMake
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
-  BUILD_TYPE: Release
+  BUILD_TYPE: Debug
 
 jobs:
   build:
@@ -16,25 +16,32 @@ jobs:
     # well on Windows or Mac.  You can convert this to a matrix build if you need
     # cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{matrix.os}}
 
     steps:
-    - uses: actions/checkout@v2
-    
-    - name: Install dependencies
-      run: |
-        sudo apt-get install -y python3-pip clang-format
-        python3 -m pip install cmake-format
+      - uses: actions/checkout@v2
 
-    - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      - name: Install dependencies
+        run: |
+          if [[ "${{ runner.os }}" == 'windows-latest' ]]; then
+            declare -x WINDOWS=true
+          elif [[ "${{ runner.os }}" == 'ubuntu-latest' ]]
+            sudo apt-get install -y python3-pip clang-format
+            python3 -m pip install cmakelang
+          fi
 
-    - name: Check format
-      working-directory: ${{github.workspace}}
-      run: cmake --build ${{github.workspace}}/build --target check-format --config ${{env.BUILD_TYPE}} -DCMAKE_FORMAT_EXCLUDE=cmake/CPM.cmake
+      - name: Configure CMake
+        # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+        # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
-    - name: Build
-      # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      - name: Check format
+        working-directory: ${{github.workspace}}
+        run: cmake --build ${{github.workspace}}/build --target check-format --config ${{env.BUILD_TYPE}}
+
+      - name: Build
+        # Build your program with the given configuration
+        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
