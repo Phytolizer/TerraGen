@@ -15,9 +15,19 @@ int Random::GetInt(const int min, const int max)
     return std::uniform_int_distribution{min, max}(m_eng);
 }
 
-double Random::GetNoise(int x, int y)
+int Random::GetInt(const double min, const double max)
+{
+    return GetInt(static_cast<int>(min), static_cast<int>(max));
+}
+
+double Random::GetNoise(const double x, const double y)
 {
     return m_noise.GetNoise<double>(x, y);
+}
+
+double Random::GetNoise(const int x, const int y)
+{
+    return GetNoise(static_cast<double>(x), static_cast<double>(y));
 }
 
 std::uint64_t Random::Next()

@@ -15,6 +15,8 @@ class Random
     explicit Random(std::uint64_t seed);
     double GetDouble(double min, double max);
     int GetInt(int min, int max);
+    int GetInt(double min, double max);
+    double GetNoise(double x, double y);
     double GetNoise(int x, int y);
     std::uint64_t Next();
 };

@@ -40,7 +40,6 @@ class WorldGenerator
         bool overrideBlocks = true);
     int RandomHeight(double min, double max);
     std::vector<int> RandomTerrain(int minHeight, int maxHeight, double amplitude);
-    [[nodiscard]] std::size_t GetWidth() const;
     [[nodiscard]] std::size_t GetHeight() const;
 
     // World Setup
@@ -58,8 +57,8 @@ class WorldGenerator
     void GenerateEntranceCaves(const std::vector<int>& surface);
     void GenerateLargeCaves(const std::vector<int>& cavernStart);
     // Scattered Blocks
-    void GenerateClay(std::vector<int> start, std::vector<int> mid, std::vector<int> end);
-    void GenerateGrass(std::vector<int> start, int end);
+    void GenerateClay(const std::vector<int>& start, const std::vector<int>& mid, const std::vector<int>& end);
+    void GenerateGrass(const std::vector<int>& start, int end);
     void GenerateMud(int start, int end);
     void GenerateSilt(int start, int end);
     // Biomes Part 1

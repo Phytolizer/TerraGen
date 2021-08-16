@@ -153,11 +153,6 @@ std::vector<int> WorldGenerator::RandomTerrain(int minHeight, int maxHeight, dou
 }
 #pragma endregion Main Functions
 
-std::size_t WorldGenerator::GetWidth() const
-{
-    return m_width;
-}
-
 std::size_t WorldGenerator::GetHeight() const
 {
     return m_height;
@@ -199,7 +194,6 @@ void WorldGenerator::GenerateLayers(std::vector<int> dirtTerrain, std::vector<in
     {
         const int dirt = dirtTerrain[x];
         const int stone = stoneTerrain[x];
-        Tile tile;
         for (int y = 0; y < dirt; ++y)
         {
             SetTile(x, y, Tile::Type::Air);
@@ -253,8 +247,8 @@ int WorldGenerator::ComputeWithinUsableArea(const std::vector<int>& surfaceTerra
 void WorldGenerator::GenerateSurfaceTunnels(const std::vector<int>& surfaceTerrain)
 {
     const int tunnelCount = m_random.GetInt(6, 10);
-    const std::uint64_t r1 = m_random.Next();
-    const std::uint64_t r2 = m_random.Next();
+    const int r1 = static_cast<int>(m_random.Next());
+    const int r2 = static_cast<int>(m_random.Next());
     for (int i = 0; i < tunnelCount; ++i)
     {
         constexpr int TUNNEL_SIZE_MIN = 30;
@@ -338,6 +332,7 @@ void WorldGenerator::GenerateSandDesert(const std::vector<int>& surfaceTerrain)
 
             for (int y = surfaceTerrain[x]; y < depth; ++y)
             {
+                // Fill with Sand
                 SetTile(x, y, Tile::Type::Sand);
             }
         }
@@ -353,19 +348,22 @@ void WorldGenerator::GenerateSandPiles(int dirtLevel, const std::vector<int>& ro
     // Generate Sand Piles
     for (int x = 0; x < m_width; ++x)
     {
-        int bottom = end[x] + 40;
+        constexpr int SAND_PILE_OVERCORRECTION = 40;
+        constexpr int SAND_PILE_MAX_OFFSET = 5;
+        constexpr int SAND_PILE_PROXIMITY_THRESHOLD = 30;
+        int bottom = end[x] + SAND_PILE_OVERCORRECTION;
         for (int y = mid; y < bottom; ++y)
         {
             double noise = m_random.GetNoise(x * SAND_PILE_SCALE, y * SAND_PILE_SCALE);
             if (y - mid <= SAND_PILE_MAX_OFFSET)
             {
-                double proximity = 5 - (y - mid);
-                noise -= proximity / 30;
+                double proximity = SAND_PILE_MAX_OFFSET - (y - mid);
+                noise -= proximity / SAND_PILE_PROXIMITY_THRESHOLD;
             }
-            else if (bottom - y <= 5)
+            else if (bottom - y <= SAND_PILE_MAX_OFFSET)
             {
-                double proximity = 6 - (bottom - y);
-                noise -= proximity / 30;
+                double proximity = SAND_PILE_MAX_OFFSET + 1 - (bottom - y);
+                noise -= proximity / SAND_PILE_PROXIMITY_THRESHOLD;
             }
             if (noise > SAND_PILE_CUTOFF)
             {
@@ -392,7 +390,7 @@ std::vector<int> WorldGenerator::GenerateAnthills(const std::vector<int>& surfac
 {
     int anthillCount = AnthillCount(m_size);
 
-    std::vector<int> anthillCavePositions(anthillCount * 2);
+    std::vector<int> anthillCavePositions(static_cast<size_t>(anthillCount * 2));
 
     for (int i = 0; i < anthillCount; ++i)
     {
@@ -429,7 +427,7 @@ std::vector<int> WorldGenerator::GenerateAnthills(const std::vector<int>& surfac
         }
 
         const int mid = start + size / 2;
-        anthillCavePositions[i * 2] = mid;
+        anthillCavePositions[static_cast<size_t>(i) * 2] = mid;
         anthillCavePositions[i * 2 + 1] = surfaceTerrain[mid] - size / 4;
     }
 
@@ -447,14 +445,10 @@ void WorldGenerator::GenerateSurfaceStone(const std::vector<int>& start, const s
             double noise = m_random.GetNoise(x * SURFACE_STONE_SCALE, y * SURFACE_STONE_SCALE);
             if (noise > SURFACE_STONE_CUTOFF)
             {
-                int pos = x + m_width * y;
-                switch (m_tiles[pos].m_type)
+                if (IsTile(x, y, Tile::Type::Dirt))
                 {
-                case Tile::Type::Dirt:
                     SetTile(x, y, Tile::Type::Stone);
-                default:
-                    break;
-                };
+                }
             }
         }
     }
@@ -487,7 +481,7 @@ constexpr double CAVERN_DIRT_SCALE = 16;
 constexpr double CAVERN_DIRT_CUTOFF = 0.65;
 void WorldGenerator::GenerateCavernDirt(const std::vector<int>& start, int end)
 {
-    int offset = m_random.Next();
+    int offset = static_cast<int>(m_random.Next());
     for (int x = 0; x < m_width; ++x)
     {
         for (int y = start[x]; y < end; ++y)
@@ -514,6 +508,10 @@ void WorldGenerator::GenerateCavernDirt(const std::vector<int>& start, int end)
 #pragma region Caves
 void WorldGenerator::GenerateCaves(std::vector<int> undergroundStart)
 {
+    constexpr double CAVE_SCALE = 5;
+    constexpr double CAVE_SCALE_HORIZONTAL = 7.5;
+    constexpr double CAVE_SCALE_VERTICAL = 3.3;
+    constexpr double CAVE_CUTOFF = 0.65;
     for (int x = 0; x < m_width; ++x)
     {
         for (int y = undergroundStart[x]; y < m_height; ++y)
@@ -567,7 +565,10 @@ void WorldGenerator::GenerateClay(
 {
     for (int x = 0; x < m_width; ++x)
     {
-        for (int y = start[x] + 5; y < mid[x] + 10; ++y)
+        constexpr int START_OFFSET = 5;
+        constexpr int MID_OFFSET = 10;
+        constexpr int END_OFFSET = 30;
+        for (int y = start[x] + START_OFFSET; y < mid[x] + MID_OFFSET; ++y)
         {
             double n = m_random.GetNoise(x * CLAY_SCALE, y * CLAY_SCALE);
             if (n < CLAY_CUTOFF1)
@@ -584,7 +585,7 @@ void WorldGenerator::GenerateClay(
                 break;
             };
         }
-        for (int y = mid[x] + 10; y < end[x] + 30; ++y)
+        for (int y = mid[x] + MID_OFFSET; y < end[x] + END_OFFSET; ++y)
         {
             double n = m_random.GetNoise(x * CLAY_SCALE, y * CLAY_SCALE);
             if (n < CLAY_CUTOFF2)
@@ -654,7 +655,7 @@ void WorldGenerator::GenerateSilt(int start, int end)
 
 // Metals, Gems, and Webs
 #pragma region Shinies
-void WorldGenerator::GenerateMetals(std::vector<int> surface, int underground, int cavern, int underworld)
+void WorldGenerator::GenerateMetals(const std::vector<int>& surface, int underground, int cavern, int underworld)
 {
     int cavernRadius = (underground + cavern) / 2 - underground;
     // COPPER
@@ -732,7 +733,7 @@ void WorldGenerator::GenerateWebs(int start, int end)
 
 // Fixes
 #pragma region Fixes
-void WorldGenerator::GenerateAnthillCaves(std::vector<int> positions)
+void WorldGenerator::GenerateAnthillCaves(const std::vector<int>& positions)
 {
 }
 
