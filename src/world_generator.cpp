@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cstdlib>
 
+#pragma region Class Functions
 // Constructor
 WorldGenerator::WorldGenerator(WorldSize size, std::uint64_t seed) : m_random{seed}, m_size{size}
 {
@@ -29,6 +30,12 @@ WorldGenerator::WorldGenerator(WorldSize size, std::uint64_t seed) : m_random{se
     }
     m_tiles.resize(m_width * m_height, Tile());
 }
+
+std::size_t WorldGenerator::GetHeight() const
+{
+    return m_height;
+}
+#pragma endregion
 
 // Tile Functions, Terrain and Random Height Functions
 #pragma region Main Functions
@@ -95,14 +102,14 @@ int WorldGenerator::RandomHeight(double min, double max)
     return static_cast<int>(static_cast<double>(m_height) * m_random.GetDouble(min, max));
 }
 
-std::vector<int> WorldGenerator::RandomTerrain(int minHeight, int maxHeight, double amplitude)
+std::vector<int> WorldGenerator::RandomTerrain(int minHeight, int maxHeight, double amplitude, int timer)
 {
-    constexpr int ADJUST_GOAL_TIMER_MIN = 40;
-    constexpr int ADJUST_GOAL_TIMER_MAX = 120;
     constexpr int TREND_ADJUST = 2;
     constexpr int HEIGHT_CORRECTION_DELTA = 15;
     constexpr int VELOCITY_LERP_MULTIPLIER = 10;
     constexpr double LERP_TIME = 0.01;
+
+    const int goalTimerOffset = timer / 4;
 
     std::vector<int> terrainHeight(m_width);
 
@@ -120,7 +127,7 @@ std::vector<int> WorldGenerator::RandomTerrain(int minHeight, int maxHeight, dou
         if (--goalTimer <= 0)
         {
             // move goal to new location within min-max bounds
-            goalTimer = m_random.GetInt(ADJUST_GOAL_TIMER_MIN, ADJUST_GOAL_TIMER_MAX);
+            goalTimer = m_random.GetInt(timer - goalTimerOffset, timer + goalTimerOffset);
             double change = m_random.GetDouble(-amplitude * (TREND_ADJUST + trend), amplitude * (TREND_ADJUST - trend));
             if (goal + change < minHeight)
             {
@@ -156,12 +163,7 @@ std::vector<int> WorldGenerator::RandomTerrain(int minHeight, int maxHeight, dou
 }
 #pragma endregion Main Functions
 
-std::size_t WorldGenerator::GetHeight() const
-{
-    return m_height;
-}
-
-// World Setup
+// Terrain, Dirt, Stone, and Sand
 #pragma region WorldSetup
 void WorldGenerator::GenerateDepthLevels(int surface, int cavern, int underworld)
 {
@@ -262,7 +264,7 @@ void WorldGenerator::GenerateSurfaceTunnels(const std::vector<int>& surfaceTerra
     for (int i = 0; i < tunnelCount; ++i)
     {
         int size = m_random.GetInt(TUNNEL_SIZE_MIN, TUNNEL_SIZE_MAX);
-        int start = ComputeWithinUsableArea(surfaceTerrain, i, size);
+        int start = ComputeWithinUsableArea(surfaceTerrain, i, size, Tile::Type::Sand);
 
         const int spacing = 6;
         for (int x = start; x < start + size; ++x)
@@ -272,12 +274,19 @@ void WorldGenerator::GenerateSurfaceTunnels(const std::vector<int>& surfaceTerra
             int below =
                 static_cast<int>((m_random.GetNoise(x, r2) + NOISE_OFFSET) * TUNNEL_NOISE_SCALE + TUNNEL_OFFSET);
 
+            int height = surfaceTerrain[x] - spacing;
             if (x == start || x == start + size - 1)
             {
                 above++;
                 below--;
             }
-            int height = surfaceTerrain[x] - spacing;
+            else
+            {
+                for (int y = height + below; y < surfaceTerrain[x]; ++y)
+                {
+                    SetWall(x, y, Tile::Wall::Dirt);
+                }
+            }
             for (int y = height + above; y < height + below; ++y)
             {
                 if (y == height + above || y == height + below - 1)
@@ -288,10 +297,6 @@ void WorldGenerator::GenerateSurfaceTunnels(const std::vector<int>& surfaceTerra
                 {
                     SetTile(x, y, Tile::Type::Dirt);
                 }
-            }
-            for (int y = height + below; y < surfaceTerrain[x]; ++y)
-            {
-                SetWall(x, y, Tile::Wall::Dirt);
             }
         }
     }
@@ -448,11 +453,13 @@ void WorldGenerator::GenerateSurfaceStone(const std::vector<int>& start, const s
     constexpr double SURFACE_STONE_SCALE = 10;
     constexpr double SURFACE_STONE_CUTOFF = 0.75;
 
+    const int offset = static_cast<int>(m_random.Next());
+
     for (int x = 0; x < m_width; ++x)
     {
         for (int y = start[x]; y < end[x]; ++y)
         {
-            double noise = m_random.GetNoise(x * SURFACE_STONE_SCALE, y * SURFACE_STONE_SCALE);
+            double noise = m_random.GetNoise(x * SURFACE_STONE_SCALE, y * SURFACE_STONE_SCALE + offset);
             if (noise > SURFACE_STONE_CUTOFF)
             {
                 if (IsTile(x, y, Tile::Type::Dirt))
@@ -468,16 +475,18 @@ void WorldGenerator::GenerateUndergroundStone(const std::vector<int>& start, con
 {
     constexpr double UNDERGROUND_STONE_SCALE = 22;
     constexpr double UNDERGROUND_STONE_CUTOFF = 0.4;
+    
+    const int offset = static_cast<int>(m_random.Next());
 
     for (int x = 0; x < m_width; ++x)
     {
         for (int y = start[x]; y < end[x]; ++y)
         {
-            const double noiseScale1 = m_random.GetNoise(x * UNDERGROUND_STONE_SCALE, y * UNDERGROUND_STONE_SCALE);
+            const double noiseScale1 = m_random.GetNoise(x * UNDERGROUND_STONE_SCALE, y * UNDERGROUND_STONE_SCALE + offset);
             const double noiseScale2 =
-                m_random.GetNoise(x * UNDERGROUND_STONE_SCALE / 2, (y * UNDERGROUND_STONE_SCALE / 2) / 2);
+                m_random.GetNoise(x * UNDERGROUND_STONE_SCALE / 2, (y * UNDERGROUND_STONE_SCALE / 2 + offset) / 2);
             const double noiseScale4 =
-                m_random.GetNoise(x * UNDERGROUND_STONE_SCALE / 4, (y * UNDERGROUND_STONE_SCALE / 4) / 4);
+                m_random.GetNoise(x * UNDERGROUND_STONE_SCALE / 4, (y * UNDERGROUND_STONE_SCALE / 4 + offset) / 4);
 
             const double noise = noiseScale1 + noiseScale2 + noiseScale4;
             if (noise > UNDERGROUND_STONE_CUTOFF)
@@ -501,9 +510,9 @@ void WorldGenerator::GenerateCavernDirt(const std::vector<int>& start, int end)
         {
             const double noiseScale1 = m_random.GetNoise(x * CAVERN_DIRT_SCALE, y * CAVERN_DIRT_SCALE + offset);
             const double noiseScale2 =
-                m_random.GetNoise(x * CAVERN_DIRT_SCALE / 2, y * CAVERN_DIRT_SCALE / 2) / 2 + offset;
+                m_random.GetNoise(x * CAVERN_DIRT_SCALE / 2, y * CAVERN_DIRT_SCALE / 2 + offset) / 2;
             const double noiseScale4 =
-                m_random.GetNoise(x * CAVERN_DIRT_SCALE / 4, y * CAVERN_DIRT_SCALE / 4) / 4 + offset;
+                m_random.GetNoise(x * CAVERN_DIRT_SCALE / 4, y * CAVERN_DIRT_SCALE / 4 + offset) / 4;
 
             const double noise = noiseScale1 + noiseScale2 + noiseScale4;
 
@@ -517,7 +526,7 @@ void WorldGenerator::GenerateCavernDirt(const std::vector<int>& start, int end)
 }
 #pragma endregion
 
-// Caves
+// Small, Large, and Entrance Caves
 #pragma region Caves
 void WorldGenerator::GenerateCaves(const std::vector<int>& undergroundStart)
 {
@@ -591,7 +600,7 @@ void WorldGenerator::GenerateClay(
             {
                 continue;
             }
-            int pos = x + m_width * y;
+            int pos = static_cast<int>(x + m_width * y);
             switch (m_tiles[pos].m_type)
             {
             case Tile::Type::Dirt:
@@ -688,16 +697,16 @@ void WorldGenerator::FillBlobAtRandomPosition(Vector2<int> horizontal, Vector2<i
 
 void WorldGenerator::GenerateMetals(int surface, int underground, int cavern, int underworld)
 {
-    const Tile::Type copperType = m_random.Next() % 2 ? Tile::Type::Copper : Tile::Type::Tin;
-    const Tile::Type ironType = m_random.Next() % 2 ? Tile::Type::Iron : Tile::Type::Lead;
-    const Tile::Type silverType = m_random.Next() % 2 ? Tile::Type::Silver : Tile::Type::Tungsten;
-    const Tile::Type goldType = m_random.Next() % 2 ? Tile::Type::Gold : Tile::Type::Platinum;
+    const Tile::Type copperType = m_random.Next() % 2 == 1 ? Tile::Type::Copper : Tile::Type::Tin;
+    const Tile::Type ironType = m_random.Next() % 2 == 1 ? Tile::Type::Iron : Tile::Type::Lead;
+    const Tile::Type silverType = m_random.Next() % 2 == 1 ? Tile::Type::Silver : Tile::Type::Tungsten;
+    const Tile::Type goldType = m_random.Next() % 2 == 1 ? Tile::Type::Gold : Tile::Type::Platinum;
 
-    const Vector2<int> WORLD_WIDTH = Vector2<int> {0, static_cast<int>(m_width)};
+    const Vector2<int> worldWidth = Vector2<int> {0, static_cast<int>(m_width)};
     const int cavernRadius = (underground + cavern) / 2 - underground;
-    const Vector2<int> SURFACE_HEIGHT = Vector2<int> {surface, underground};
-    const Vector2<int> UNDERGROUND_HEIGHT = Vector2<int> {underground, cavern + cavernRadius};
-    const Vector2<int> CAVERN_HEIGHT = Vector2<int> {cavern - cavernRadius, underworld};
+    const Vector2<int> surfaceHeight = Vector2<int> {surface, underground};
+    const Vector2<int> undergroundHeight = Vector2<int> {underground, cavern + cavernRadius};
+    const Vector2<int> cavernHeight = Vector2<int> {cavern - cavernRadius, underworld};
 
     constexpr double COPPER_SURFACE_AMOUNT                  = 6E-05;
     constexpr Vector2<double> COPPER_SURFACE_SIZE           = Vector2<double> {3, 6};
@@ -709,21 +718,21 @@ void WorldGenerator::GenerateMetals(int surface, int underground, int cavern, in
     constexpr Vector2<double> COPPER_CAVERN_SIZE            = Vector2<double> {4, 9};
     constexpr Vector2<double> COPPER_CAVERN_VARIATION       = Vector2<double> {0.1, 0.4};
     
-    const int COPPER_SURFACE_COUNT = static_cast<int>(static_cast<double>(m_tiles.size()) * COPPER_SURFACE_AMOUNT);
-    const int COPPER_UNDERGROUND_COUNT = static_cast<int>(static_cast<double>(m_tiles.size()) * COPPER_UNDERGROUND_AMOUNT);
-    const int COPPER_CAVERN_COUNT = static_cast<int>(static_cast<double>(m_tiles.size()) * COPPER_CAVERN_AMOUNT);
+    const int copperSurfaceCount = static_cast<int>(static_cast<double>(m_tiles.size()) * COPPER_SURFACE_AMOUNT);
+    const int copperUndergroundCount = static_cast<int>(static_cast<double>(m_tiles.size()) * COPPER_UNDERGROUND_AMOUNT);
+    const int copperCavernCount = static_cast<int>(static_cast<double>(m_tiles.size()) * COPPER_CAVERN_AMOUNT);
     // COPPER
-    for (int i = 0; i < COPPER_SURFACE_COUNT; ++i)
+    for (int i = 0; i < copperSurfaceCount; ++i)
     {
-        FillBlobAtRandomPosition(WORLD_WIDTH, SURFACE_HEIGHT, Tile::Type::Copper, COPPER_SURFACE_SIZE, COPPER_SURFACE_VARIATION);
+        FillBlobAtRandomPosition(worldWidth, surfaceHeight, Tile::Type::Copper, COPPER_SURFACE_SIZE, COPPER_SURFACE_VARIATION);
     }
-    for (int i = 0; i < COPPER_UNDERGROUND_COUNT; ++i)
+    for (int i = 0; i < copperUndergroundCount; ++i)
     {
-        FillBlobAtRandomPosition(WORLD_WIDTH, UNDERGROUND_HEIGHT, Tile::Type::Copper, COPPER_UNDERGROUND_SIZE, COPPER_UNDERGROUND_VARIATION);
+        FillBlobAtRandomPosition(worldWidth, undergroundHeight, Tile::Type::Copper, COPPER_UNDERGROUND_SIZE, COPPER_UNDERGROUND_VARIATION);
     }
-    for (int i = 0; i < COPPER_CAVERN_COUNT; ++i)
+    for (int i = 0; i < copperCavernCount; ++i)
     {
-        FillBlobAtRandomPosition(WORLD_WIDTH, CAVERN_HEIGHT, Tile::Type::Copper, COPPER_CAVERN_SIZE, COPPER_CAVERN_VARIATION);
+        FillBlobAtRandomPosition(worldWidth, cavernHeight, Tile::Type::Copper, COPPER_CAVERN_SIZE, COPPER_CAVERN_VARIATION);
     }
     
     constexpr double IRON_SURFACE_AMOUNT                  = 8E-05;
@@ -736,21 +745,21 @@ void WorldGenerator::GenerateMetals(int surface, int underground, int cavern, in
     constexpr Vector2<double> IRON_CAVERN_SIZE            = Vector2<double> {4, 9};
     constexpr Vector2<double> IRON_CAVERN_VARIATION       = Vector2<double> {0.1, 0.4};
 
-    const int IRON_SURFACE_COUNT = static_cast<int>(static_cast<double>(m_tiles.size()) * IRON_SURFACE_AMOUNT);
-    const int IRON_UNDERGROUND_COUNT = static_cast<int>(static_cast<double>(m_tiles.size()) * IRON_UNDERGROUND_AMOUNT);
-    const int IRON_CAVERN_COUNT = static_cast<int>(static_cast<double>(m_tiles.size()) * IRON_CAVERN_AMOUNT);
+    const int ironSurfaceCount = static_cast<int>(static_cast<double>(m_tiles.size()) * IRON_SURFACE_AMOUNT);
+    const int ironUndergroundCount = static_cast<int>(static_cast<double>(m_tiles.size()) * IRON_UNDERGROUND_AMOUNT);
+    const int ironCavernCount = static_cast<int>(static_cast<double>(m_tiles.size()) * IRON_CAVERN_AMOUNT);
     // IRON
-    for (int i = 0; i < IRON_SURFACE_COUNT; ++i)
+    for (int i = 0; i < ironSurfaceCount; ++i)
     {
-        FillBlobAtRandomPosition(WORLD_WIDTH, SURFACE_HEIGHT, Tile::Type::Iron, IRON_SURFACE_SIZE, IRON_SURFACE_VARIATION);
+        FillBlobAtRandomPosition(worldWidth, surfaceHeight, Tile::Type::Iron, IRON_SURFACE_SIZE, IRON_SURFACE_VARIATION);
     }
-    for (int i = 0; i < IRON_UNDERGROUND_COUNT; ++i)
+    for (int i = 0; i < ironUndergroundCount; ++i)
     {
-        FillBlobAtRandomPosition(WORLD_WIDTH, UNDERGROUND_HEIGHT, Tile::Type::Iron, IRON_UNDERGROUND_SIZE, IRON_UNDERGROUND_VARIATION);
+        FillBlobAtRandomPosition(worldWidth, undergroundHeight, Tile::Type::Iron, IRON_UNDERGROUND_SIZE, IRON_UNDERGROUND_VARIATION);
     }
-    for (int i = 0; i < IRON_CAVERN_COUNT; ++i)
+    for (int i = 0; i < ironCavernCount; ++i)
     {
-        FillBlobAtRandomPosition(WORLD_WIDTH, CAVERN_HEIGHT, Tile::Type::Iron, IRON_CAVERN_SIZE, IRON_CAVERN_VARIATION);
+        FillBlobAtRandomPosition(worldWidth, cavernHeight, Tile::Type::Iron, IRON_CAVERN_SIZE, IRON_CAVERN_VARIATION);
     }
     
     constexpr double SILVER_UNDERGROUND_AMOUNT              = 2.6E-05;
@@ -760,27 +769,27 @@ void WorldGenerator::GenerateMetals(int surface, int underground, int cavern, in
     constexpr Vector2<double> SILVER_CAVERN_SIZE            = Vector2<double> {4, 9};
     constexpr Vector2<double> SILVER_CAVERN_VARIATION       = Vector2<double> {0.1, 0.4};
     
-    const int SILVER_UNDERGROUND_COUNT = static_cast<int>(static_cast<double>(m_tiles.size()) * IRON_UNDERGROUND_AMOUNT);
-    const int SILVER_CAVERN_COUNT = static_cast<int>(static_cast<double>(m_tiles.size()) * IRON_CAVERN_AMOUNT);
+    const int silverUndergroundCount = static_cast<int>(static_cast<double>(m_tiles.size()) * IRON_UNDERGROUND_AMOUNT);
+    const int silverCavernCount = static_cast<int>(static_cast<double>(m_tiles.size()) * IRON_CAVERN_AMOUNT);
     // SILVER
-    for (int i = 0; i < SILVER_UNDERGROUND_COUNT; ++i)
+    for (int i = 0; i < silverUndergroundCount; ++i)
     {
-        FillBlobAtRandomPosition(WORLD_WIDTH, UNDERGROUND_HEIGHT, Tile::Type::Silver, SILVER_UNDERGROUND_SIZE, SILVER_UNDERGROUND_VARIATION);
+        FillBlobAtRandomPosition(worldWidth, undergroundHeight, Tile::Type::Silver, SILVER_UNDERGROUND_SIZE, SILVER_UNDERGROUND_VARIATION);
     }
-    for (int i = 0; i < SILVER_CAVERN_COUNT; ++i)
+    for (int i = 0; i < silverCavernCount; ++i)
     {
-        FillBlobAtRandomPosition(WORLD_WIDTH, CAVERN_HEIGHT, Tile::Type::Silver, SILVER_CAVERN_SIZE, SILVER_CAVERN_VARIATION);
+        FillBlobAtRandomPosition(worldWidth, cavernHeight, Tile::Type::Silver, SILVER_CAVERN_SIZE, SILVER_CAVERN_VARIATION);
     }
 
     constexpr double GOLD_CAVERN_AMOUNT                   = 0.00012;
     constexpr Vector2<double> GOLD_CAVERN_SIZE            = Vector2<double> {4, 8};
     constexpr Vector2<double> GOLD_CAVERN_VARIATION       = Vector2<double> {0.1, 0.4};
     
-    const int GOLD_CAVERN_COUNT = static_cast<int>(static_cast<double>(m_tiles.size()) * GOLD_CAVERN_AMOUNT);
+    const int goldCavernCount = static_cast<int>(static_cast<double>(m_tiles.size()) * GOLD_CAVERN_AMOUNT);
     // GOLD
-    for (int i = 0; i < GOLD_CAVERN_COUNT; ++i)
+    for (int i = 0; i < goldCavernCount; ++i)
     {
-        FillBlobAtRandomPosition(WORLD_WIDTH, CAVERN_HEIGHT, Tile::Type::Silver, GOLD_CAVERN_SIZE, GOLD_CAVERN_VARIATION);
+        FillBlobAtRandomPosition(worldWidth, cavernHeight, Tile::Type::Silver, GOLD_CAVERN_SIZE, GOLD_CAVERN_VARIATION);
     }
 }
 
@@ -824,6 +833,8 @@ void WorldGenerator::FixGravitatingSand(const std::vector<int>& surface)
 
 void WorldGenerator::FixDirtWalls(const std::vector<int>& surface)
 {
+    constexpr int CORRECTION_RADIUS = 16;
+
     for (int x = 0; x < m_width; ++x)
     {
         for (int y = surface[x] - CORRECTION_RADIUS; y < surface[x] + CORRECTION_RADIUS; ++y)
@@ -832,7 +843,7 @@ void WorldGenerator::FixDirtWalls(const std::vector<int>& surface)
             {
                 break;
             }
-            else if (!IsWall(x, y, Tile::Wall::Air))
+            if (!IsWall(x, y, Tile::Wall::Air))
             {
                 do
                 {
@@ -847,6 +858,8 @@ void WorldGenerator::FixDirtWalls(const std::vector<int>& surface)
 
 void WorldGenerator::FixWaterOnSand(const std::vector<int>& surface)
 {
+    constexpr int CORRECTION_RADIUS = 16;
+    
     for (int x = 0; x < m_width; ++x)
     {
         for (int y = surface[x] - CORRECTION_RADIUS; y < surface[x] + CORRECTION_RADIUS; ++y)

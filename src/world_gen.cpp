@@ -6,7 +6,7 @@ namespace WorldGen
 {
 World Generate(const WorldSize size)
 {
-    constexpr std::uint64_t SEED = 100;
+    constexpr std::uint64_t SEED = 999;
     auto world = WorldGenerator{size, SEED};
 
     /* Depth Contours
@@ -24,22 +24,22 @@ World Generate(const WorldSize size)
     const int cavernLayer = world.RandomHeight(0.36, 0.38);
     const int underworldLayer = static_cast<int>(world.GetHeight()) - 200;
 
-    constexpr int SURFACE_MIN_OFFSET = -125;
-    constexpr int SURFACE_MAX_OFFSET = -5;
-    constexpr int SURFACE_AMPLITUDE = 5;
-    constexpr int DIRT_MIN_OFFSET = 0;
-    constexpr int DIRT_MAX_OFFSET = 10;
-    constexpr int DIRT_AMPLITUDE = 2;
-    constexpr int ROCK_MIN_OFFSET = -125;
-    constexpr int ROCK_MAX_OFFSET = -5;
-    constexpr int ROCK_AMPLITUDE = 5;
+    constexpr Vector2<int> SURFACE_OFFSET   = Vector2<int> {-125, -5};
+    constexpr int SURFACE_AMPLITUDE         = 5;
+    constexpr int SURFACE_TIMER             = 80;
+    constexpr Vector2<int> DIRT_OFFSET      = Vector2<int> {-4, 16};
+    constexpr int DIRT_AMPLITUDE            = 2;
+    constexpr int DIRT_TIMER                = 20;
+    constexpr Vector2<int> ROCK_OFFSET      = Vector2<int> {-20, 20};
+    constexpr int ROCK_AMPLITUDE            = 3;
+    constexpr int ROCK_TIMER                = 20;
 
     auto surfaceTerrain =
-        world.RandomTerrain(surfaceLayer + SURFACE_MIN_OFFSET, surfaceLayer + SURFACE_MAX_OFFSET, SURFACE_AMPLITUDE);
+        world.RandomTerrain(surfaceLayer + SURFACE_OFFSET.x, surfaceLayer + SURFACE_OFFSET.y, SURFACE_AMPLITUDE, SURFACE_TIMER);
     auto dirtHeights =
-        world.RandomTerrain(surfaceLayer + DIRT_MIN_OFFSET, surfaceLayer + DIRT_MAX_OFFSET, DIRT_AMPLITUDE);
+        world.RandomTerrain(surfaceLayer + DIRT_OFFSET.x, surfaceLayer + DIRT_OFFSET.y, DIRT_AMPLITUDE, DIRT_TIMER);
     auto rockHeights =
-        world.RandomTerrain(cavernLayer + ROCK_MIN_OFFSET, cavernLayer + ROCK_MAX_OFFSET, ROCK_AMPLITUDE);
+        world.RandomTerrain(cavernLayer + ROCK_OFFSET.x, cavernLayer + ROCK_OFFSET.y, ROCK_AMPLITUDE, ROCK_TIMER);
 
     world.GenerateDepthLevels(surfaceLayer, cavernLayer, underworldLayer);
     world.GenerateLayers(surfaceTerrain, rockHeights, underworldLayer);
@@ -89,7 +89,7 @@ World Generate(const WorldSize size)
      */
 
     /// Add Metals
-    world.GenerateMetals(surfaceLayer + SURFACE_MIN_OFFSET, surfaceLayer + SURFACE_MAX_OFFSET, cavernLayer, underworldLayer);
+    world.GenerateMetals(surfaceLayer + SURFACE_OFFSET.x, surfaceLayer + SURFACE_OFFSET.y, cavernLayer, underworldLayer);
     /// Add Gems
     world.GenerateGems(surfaceLayer, underworldLayer);
     /// Add Webs

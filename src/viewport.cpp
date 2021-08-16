@@ -12,11 +12,11 @@ Viewport::Viewport(int dx, int dy, int width, int height, int tileSize)
           SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN)},
       renderer{SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC)}
 {
-    if (!window)
+    if (window == nullptr)
     {
         throw std::runtime_error{fmt::format("could not create SDL window: {}", SDL_GetError())};
     }
-    if (!renderer)
+    if (renderer == nullptr)
     {
         throw std::runtime_error{fmt::format("could not create SDL renderer: {}", SDL_GetError())};
     }
