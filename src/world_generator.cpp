@@ -113,8 +113,8 @@ std::vector<int> WorldGenerator::RandomTerrain(int minHeight, int maxHeight, dou
 
     std::vector<int> terrainHeight(m_width);
 
-    const int bounds = (minHeight - maxHeight) / 3;
-    const std::uint64_t r = m_random.Next();
+    const int bounds = (maxHeight - minHeight) / 4;
+    const int r = static_cast<int>(m_random.Next());
 
     double height = m_random.GetInt(minHeight + bounds, maxHeight - bounds);
     double velocity = 0;
@@ -146,7 +146,11 @@ std::vector<int> WorldGenerator::RandomTerrain(int minHeight, int maxHeight, dou
         height += velocity;
 
         // Small noise to add to the height walk
-        const double noise = m_random.GetNoise(x, static_cast<int>(r)) * amplitude;
+        const double noiseScale1 = m_random.GetNoise(x, r) * amplitude;
+        const double noiseScale2 = m_random.GetNoise(x * 2, r) * amplitude / 2;
+        const double noiseScale4 = m_random.GetNoise(x * 4, r) * amplitude / 4;
+
+        const double noise = noiseScale1 + noiseScale2 + noiseScale4;
 
         if (height < minHeight)
         {
@@ -401,6 +405,7 @@ static int AnthillCount(WorldSize size)
 
 std::vector<int> WorldGenerator::GenerateAnthills(const std::vector<int>& surfaceTerrain)
 {
+    constexpr double ANTHILL_HEIGHT = 20;
     constexpr int ANTHILL_SIZE_MIN = 40;
     constexpr int ANTHILL_SIZE_MAX = 60;
 
@@ -422,7 +427,7 @@ std::vector<int> WorldGenerator::GenerateAnthills(const std::vector<int>& surfac
             dist = std::min(max, dist);
 
             const int base = surfaceTerrain[x];
-            const int high = surfaceTerrain[x] - (max - dist);
+            const int high = surfaceTerrain[x] - static_cast<int>((1 - (static_cast<double>(dist) / max)) * ANTHILL_HEIGHT);
             if (high > base)
             {
                 break;

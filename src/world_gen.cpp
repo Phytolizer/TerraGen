@@ -6,7 +6,7 @@ namespace WorldGen
 {
 World Generate(const WorldSize size)
 {
-    constexpr std::uint64_t SEED = 999;
+    constexpr std::uint64_t SEED = 100;
     auto world = WorldGenerator{size, SEED};
 
     /* Depth Contours
