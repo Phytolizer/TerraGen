@@ -1,14 +1,13 @@
 #include "world_gen.hpp"
 #include "random.hpp"
 #include "world_generator.hpp"
-#include <FastNoiseLite.h>
 
 namespace WorldGen
 {
 World Generate(const WorldSize size)
 {
-    constexpr std::uint64_t seed = 100;
-    auto world = WorldGenerator{size, seed};
+    constexpr std::uint64_t SEED = 100;
+    auto world = WorldGenerator{size, SEED};
 
     /* Depth Contours
      * 00% - 06% Sky
@@ -23,18 +22,32 @@ World Generate(const WorldSize size)
      */
     const int surfaceLayer = world.RandomHeight(0.25, 0.26);
     const int cavernLayer = world.RandomHeight(0.36, 0.38);
-    const int underworldLayer = world.GetHeight() - 200;
+    const int underworldLayer = static_cast<int>(world.GetHeight()) - 200;
 
-    auto surfaceTerrain = world.RandomTerrain(surfaceLayer - 125, surfaceLayer - 5, 5);
-    auto dirtHeights = world.RandomTerrain(surfaceLayer, surfaceLayer + 10, 2);
-    auto rockHeights = world.RandomTerrain(cavernLayer - 5, cavernLayer + 5, 2.5);
+    constexpr int SURFACE_MIN_OFFSET = -125;
+    constexpr int SURFACE_MAX_OFFSET = -5;
+    constexpr int SURFACE_AMPLITUDE = 5;
+    constexpr int DIRT_MIN_OFFSET = 0;
+    constexpr int DIRT_MAX_OFFSET = 10;
+    constexpr int DIRT_AMPLITUDE = 2;
+    constexpr int ROCK_MIN_OFFSET = -125;
+    constexpr int ROCK_MAX_OFFSET = -5;
+    constexpr int ROCK_AMPLITUDE = 5;
+
+    auto surfaceTerrain =
+        world.RandomTerrain(surfaceLayer + SURFACE_MIN_OFFSET, surfaceLayer + SURFACE_MAX_OFFSET, SURFACE_AMPLITUDE);
+    auto dirtHeights =
+        world.RandomTerrain(surfaceLayer + DIRT_MIN_OFFSET, surfaceLayer + DIRT_MAX_OFFSET, DIRT_AMPLITUDE);
+    auto rockHeights =
+        world.RandomTerrain(cavernLayer + ROCK_MIN_OFFSET, cavernLayer + ROCK_MAX_OFFSET, ROCK_AMPLITUDE);
 
     world.GenerateDepthLevels(surfaceLayer, cavernLayer, underworldLayer);
     world.GenerateLayers(surfaceTerrain, rockHeights, underworldLayer);
     /// Add Tunnels with walls
     world.GenerateSurfaceTunnels(surfaceTerrain);
     /// Add Sand
-    world.GenerateSand(surfaceTerrain, surfaceLayer, rockHeights);
+    world.GenerateSandDesert(surfaceTerrain);
+    world.GenerateSandPiles(surfaceLayer, rockHeights);
     /// Add Anthills (Mountains with Caves)
     auto anthillCavePos = world.GenerateAnthills(surfaceTerrain);
     /// Mix Stone into Dirt
@@ -68,7 +81,7 @@ World Generate(const WorldSize size)
      * falloff. Remove lava. Generate New Stone below cavern. Jungle walls from underground to lava level. Any mud
      * touching air becomes jungle grass) Marble (Horizontal walk) Granite (Scattered spheres?) Full Desert (Choose
      * location, create large sphere of sand partially underground. Clear any dirt/grass above. Generate sandstone /
-     * caves) Sky Islands (Stretched semi circle of clouds. Highest point - 1 gets filled with dirt/grass. Generate
+     * caves) Sky Islands (Stretched semicircle of clouds. Highest point - 1 gets filled with dirt/grass. Generate
      * Building. Add a few small cloud patches above) 1.3 Glowing Mushroom Biomes (Horizontal walk underground. Clear a
      * large area under walk. Convert stone to mud and add mushroom grass) 1.4 Glowing Mushroom Biomes (Generate large
      * blob of mud with minor falloff -- Keep caves from top and near falloff. Carve out round holes inside with flat

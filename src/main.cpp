@@ -1,13 +1,12 @@
 #include "viewport.hpp"
 #include "world_gen.hpp"
-#include <fmt/format.h>
 
 extern "C"
 {
 #include <SDL.h>
 }
 
-int main(int /*argc*/, char * /*argv*/[])
+int main(int /*argc*/, char* /*argv*/[])
 {
     SDL_Init(SDL_INIT_VIDEO);
     constexpr int WORLD_WIDTH = 1750;

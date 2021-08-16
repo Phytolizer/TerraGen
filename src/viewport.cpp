@@ -7,8 +7,9 @@
 
 Viewport::Viewport(int dx, int dy, int width, int height, int tileSize)
     : dx{dx}, dy{dy}, width{width}, height{height}, tile_size{tileSize},
-      window{SDL_CreateWindow("TerraGen", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height,
-                              SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN)},
+      window{SDL_CreateWindow(
+          "TerraGen", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height,
+          SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN)},
       renderer{SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC)}
 {
     if (!window)

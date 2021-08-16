@@ -5,7 +5,9 @@ Checks: '*,
   -modernize-use-trailing-return-type,
   -misc-non-private-member-variables-in-classes,
   -cert-err58-cpp,
-  -altera-struct-pack-align'
+  -altera-struct-pack-align,
+  -altera-id-dependent-backward-branch,
+  -altera-unroll-loops'
 CheckOptions:
   - key: readability-identifier-naming.NamespaceCase
     value: CamelCase
@@ -25,3 +27,5 @@ CheckOptions:
     value: UPPER_CASE
   - key: readability-identifier-naming.GlobalConstantCase
     value: UPPER_CASE
+  - key: readability-identifier-naming.GlobalFunctionCase
+    value: CamelCase

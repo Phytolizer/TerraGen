@@ -1,9 +1,8 @@
 #include "random.hpp"
 #include <random>
 
-Random::Random(std::uint64_t seed) : m_eng{seed}
+Random::Random(std::uint64_t seed) : m_eng{seed}, m_randomModifier{seed}
 {
-    m_randomModifier = seed;
 }
 
 double Random::GetDouble(const double min, const double max)

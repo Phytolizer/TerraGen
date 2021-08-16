@@ -1,7 +1,11 @@
 #ifndef TILE_HPP_
 #define TILE_HPP_
 
+#include <cstring>
+extern "C"
+{
 #include <SDL_video.h>
+}
 #include <cstdint>
 #include <unordered_map>
 
@@ -56,13 +60,12 @@ struct Tile
         Underworld,
     };
 
-    Type m_type;
-    Liquid m_liquid;
-    double m_liquidLevel;
-    Wall m_wall;
-    Depth m_depth;
+    Type m_type{Type::Air};
+    Liquid m_liquid{Liquid::None};
+    double m_liquidLevel{0};
+    Wall m_wall{Wall::Air};
+    Depth m_depth{Depth::Overworld};
 
-    Tile();
     void SetType(Type type);
     void SetLiquid(Liquid liquid);
     void SetWall(Wall wall);

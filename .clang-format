@@ -1,6 +1,11 @@
 ---
 BasedOnStyle: Microsoft
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
-SortIncludes: true
+SortIncludes: CaseInsensitive
 AlignTrailingComments: false
 SpacesBeforeTrailingComments: 4
+AlignAfterOpenBracket: AlwaysBreak
+AlignOperands: DontAlign
+BinPackArguments: false
+BinPackParameters: false
+PointerAlignment: Left

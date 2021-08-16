@@ -1,14 +1,5 @@
 #include "tile.hpp"
 
-Tile::Tile()
-{
-    m_type = Type::Air;
-    m_liquid = Liquid::None;
-    m_liquidLevel = 0;
-    m_wall = Wall::Air;
-    m_depth = Depth::Overworld;
-}
-
 void Tile::SetType(Type type)
 {
     m_type = type;
