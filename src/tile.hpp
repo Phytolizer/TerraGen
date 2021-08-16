@@ -24,9 +24,13 @@ struct Tile
         Slush,
         Ash,
         Copper,
+        Tin,
         Iron,
+        Lead,
         Silver,
+        Tungsten,
         Gold,
+        Platinum,
         Web,
     };
     enum class Style

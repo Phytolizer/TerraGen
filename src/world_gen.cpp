@@ -89,7 +89,7 @@ World Generate(const WorldSize size)
      */
 
     /// Add Metals
-    world.GenerateMetals(surfaceTerrain, surfaceLayer, cavernLayer, underworldLayer);
+    world.GenerateMetals(surfaceLayer + SURFACE_MIN_OFFSET, surfaceLayer + SURFACE_MAX_OFFSET, cavernLayer, underworldLayer);
     /// Add Gems
     world.GenerateGems(surfaceLayer, underworldLayer);
     /// Add Webs
@@ -116,7 +116,7 @@ World Generate(const WorldSize size)
      * Pyramids (Chance)
      * Living Wood Trees (Chance)
      * Altars
-     * Floor Jungle Surface (Add a thin line of water to jungle surface)
+     * Flood Jungle Surface (Add a thin line of water to jungle surface)
      * Jungle Temple
      * Bee Hives
      */

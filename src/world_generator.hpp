@@ -20,6 +20,7 @@ class WorldGenerator
     int ComputeStartCoordinate(int side);
     int ComputeWithinUsableArea(
         const std::vector<int>& surfaceTerrain, int side, int size, Tile::Type mask = Tile::Type::Air);
+    void FillBlobAtRandomPosition(Vector2<int> horizontal, Vector2<int> vertical, Tile::Type, Vector2<double> size, Vector2<double> variation);
 
   public:
     WorldGenerator(WorldSize size, std::uint64_t seed);
@@ -44,7 +45,7 @@ class WorldGenerator
 
     // World Setup
     void GenerateDepthLevels(int surface, int cavern, int underworld);
-    void GenerateLayers(std::vector<int> dirtTerrain, std::vector<int> stoneTerrain, int ash);
+    void GenerateLayers(const std::vector<int>& dirtTerrain, const std::vector<int>& stoneTerrain, int ash);
     void GenerateSurfaceTunnels(const std::vector<int>& surfaceTerrain);
     void GenerateSandDesert(const std::vector<int>& surfaceTerrain);
     void GenerateSandPiles(int dirtLevel, const std::vector<int>& rockHeights);
@@ -63,7 +64,7 @@ class WorldGenerator
     void GenerateSilt(int start, int end);
     // Biomes Part 1
     // Metals, Gems, and Webs
-    void GenerateMetals(const std::vector<int>& surface, int underground, int cavern, int underworld);
+    void GenerateMetals(int surface, int underground, int cavern, int underworld);
     void GenerateGems(int start, int end);
     void GenerateWebs(int start, int end);
     // Biomes Part 2

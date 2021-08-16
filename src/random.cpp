@@ -10,6 +10,11 @@ double Random::GetDouble(const double min, const double max)
     return std::uniform_real_distribution{min, max}(m_eng);
 }
 
+double Random::GetDouble(const Vector2<double> minMax)
+{
+    return GetDouble(minMax.x, minMax.y);
+}
+
 int Random::GetInt(const int min, const int max)
 {
     return std::uniform_int_distribution{min, max}(m_eng);
@@ -18,6 +23,11 @@ int Random::GetInt(const int min, const int max)
 int Random::GetInt(const double min, const double max)
 {
     return GetInt(static_cast<int>(min), static_cast<int>(max));
+}
+
+int Random::GetInt(const Vector2<int> minMax)
+{
+    return GetInt(minMax.x, minMax.y);
 }
 
 double Random::GetNoise(const double x, const double y)

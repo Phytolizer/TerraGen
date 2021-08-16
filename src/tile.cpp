@@ -47,9 +47,13 @@ const std::unordered_map<Tile::Type, SDL_Color> TILE_TYPE_COLORS{
     {Tile::Type::Slush, {146, 81, 68, 255}},
     {Tile::Type::Ash, {79, 65, 64, 255}},
     {Tile::Type::Copper, {184, 115, 51, 255}},
+    {Tile::Type::Tin, {184, 115, 51, 255}},
     {Tile::Type::Iron, {210, 210, 210, 255}},
+    {Tile::Type::Lead, {210, 210, 210, 255}},
     {Tile::Type::Silver, {190, 190, 190, 255}},
+    {Tile::Type::Tungsten, {190, 190, 190, 255}},
     {Tile::Type::Gold, {255, 215, 20, 255}},
+    {Tile::Type::Platinum, {255, 215, 20, 255}},
     {Tile::Type::Web, {250, 250, 250, 255}},
 };
 
