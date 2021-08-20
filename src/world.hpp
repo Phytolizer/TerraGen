@@ -1,6 +1,7 @@
 #ifndef TERRAGEN_WORLD_HPP
 #define TERRAGEN_WORLD_HPP
 
+#include "SDL_stdinc.h"
 #include "tile.hpp"
 #include "world_size.hpp"
 #include <fmt/format.h>
@@ -12,6 +13,8 @@ struct World
     std::size_t width;
     std::size_t height;
     WorldSize size;
+
+    static constexpr Uint32 VERSION = 87;
 
     static constexpr int WIDTH_TINY = 1750;
     static constexpr int HEIGHT_TINY = 900;
