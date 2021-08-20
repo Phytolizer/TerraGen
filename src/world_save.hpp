@@ -18,6 +18,6 @@ void SavePressurePlate(World world, std::ofstream file);
 void SaveTownManager(World world, std::ofstream file);
 void SaveBestiary(World world, std::ofstream file);
 void SaveCreativePowers(World world, std::ofstream file);
-}
+}    // namespace WorldSave
 
-#endif // TERRAGEN_WORLD_GEN_HPP
+#endif    // TERRAGEN_WORLD_GEN_HPP

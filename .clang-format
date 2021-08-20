@@ -1,7 +1,7 @@
 ---
 BasedOnStyle: Microsoft
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
-SortIncludes: CaseInsensitive
+SortIncludes: true
 AlignTrailingComments: false
 SpacesBeforeTrailingComments: 4
 AlignAfterOpenBracket: AlwaysBreak

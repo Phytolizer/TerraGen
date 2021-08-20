@@ -1,6 +1,6 @@
 #include "world.hpp"
 
-World::World(std::vector<Tile> &&tiles, std::size_t width, std::size_t height)
+World::World(std::vector<Tile>&& tiles, std::size_t width, std::size_t height)
     : tiles{std::move(tiles)}, width{width}, height{height}
 {
     switch (width)

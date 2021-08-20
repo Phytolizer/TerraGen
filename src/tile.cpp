@@ -71,7 +71,9 @@ const std::unordered_map<Tile::Wall, SDL_Color> WALL_COLORS{
 };
 
 const std::unordered_map<Tile::Depth, SDL_Color> DEPTH_COLORS{
-    {Tile::Depth::Space, {65, 64, 255, 255}},      {Tile::Depth::Overworld, {123, 152, 254, 255}},
-    {Tile::Depth::Underground, {88, 61, 46, 255}}, {Tile::Depth::Cavern, {74, 67, 60, 255}},
+    {Tile::Depth::Space, {65, 64, 255, 255}},
+    {Tile::Depth::Overworld, {123, 152, 254, 255}},
+    {Tile::Depth::Underground, {88, 61, 46, 255}},
+    {Tile::Depth::Cavern, {74, 67, 60, 255}},
     {Tile::Depth::Underworld, {50, 44, 38, 255}},
 };

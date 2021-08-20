@@ -20,7 +20,8 @@ class WorldGenerator
     int ComputeStartCoordinate(int side);
     int ComputeWithinUsableArea(
         const std::vector<int>& surfaceTerrain, int side, int size, Tile::Type mask = Tile::Type::Air);
-    void FillBlobAtRandomPosition(Vector2<int> horizontal, Vector2<int> vertical, Tile::Type, Vector2<double> size, Vector2<double> variation);
+    void FillBlobAtRandomPosition(
+        Vector2<int> horizontal, Vector2<int> vertical, Tile::Type, Vector2<double> size, Vector2<double> variation);
 
   public:
     WorldGenerator(WorldSize size, std::uint64_t seed);

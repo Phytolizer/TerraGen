@@ -25,7 +25,7 @@ struct World
     static constexpr int WIDTH_LARGE = 8400;
     static constexpr int HEIGHT_LARGE = 2400;
 
-    explicit World(std::vector<Tile> &&tiles, std::size_t width, std::size_t height);
+    explicit World(std::vector<Tile>&& tiles, std::size_t width, std::size_t height);
 };
 
 #endif    // TERRAGEN_WORLD_HPP

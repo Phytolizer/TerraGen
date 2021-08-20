@@ -12,17 +12,17 @@ struct Viewport
     int width;
     int height;
     int tile_size;
-    SDL_Window *window;
-    SDL_Renderer *renderer;
+    SDL_Window* window;
+    SDL_Renderer* renderer;
 
     Viewport(int dx, int dy, int width, int height, int tileSize);
     ~Viewport();
-    Viewport(const Viewport &) = delete;
-    Viewport(Viewport &&) = default;
-    Viewport &operator=(const Viewport &) = delete;
-    Viewport &operator=(Viewport &&) = default;
+    Viewport(const Viewport&) = delete;
+    Viewport(Viewport&&) = default;
+    Viewport& operator=(const Viewport&) = delete;
+    Viewport& operator=(Viewport&&) = default;
 
-    void Render(const World &world);
+    void Render(const World& world);
     void Move(int ddx, int ddy);
 };
 

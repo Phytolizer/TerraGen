@@ -8,7 +8,11 @@
 Viewport::Viewport(int dx, int dy, int width, int height, int tileSize)
     : dx{dx}, dy{dy}, width{width}, height{height}, tile_size{tileSize},
       window{SDL_CreateWindow(
-          "TerraGen", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height,
+          "TerraGen",
+          SDL_WINDOWPOS_UNDEFINED,
+          SDL_WINDOWPOS_UNDEFINED,
+          width,
+          height,
           SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN)},
       renderer{SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC)}
 {
@@ -33,7 +37,7 @@ Viewport::~Viewport()
 // width = viewport width moving right
 // height = viewport width moving down
 
-void Viewport::Render(const World &world)
+void Viewport::Render(const World& world)
 {
     for (int i = std::max(dx, 0); i < std::min<int>(world.width, dx + width / tile_size); ++i)
     {
